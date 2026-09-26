@@ -332,7 +332,7 @@ Créer un dépôt privé vide sur GitHub, GitLab, Bitbucket ou le fournisseur Gi
 Ajouter ensuite le dépôt distant :
 
 ```bash
-git remote add origin git@github.com:organisation/suncamel.git
+git remote add origin git@github.com:ErwanVasserot/suncamel.git
 git push -u origin main
 ```
 
