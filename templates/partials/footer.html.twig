@@ -1,0 +1,44 @@
+<footer class="bg-slate-100 py-16">
+    <div class="container">
+        <div class="grid gap-8 md:grid-cols-[auto_1fr]">
+            <a href="/" class="inline-flex items-center">
+                {% if site.logo is defined %}
+                    <img class="h-8 w-auto" src="{{ site.logo }}" alt="{{ site.name }}">
+                {% else %}
+                    <span class="text-xl font-semibold">{{ site.name }}</span>
+                {% endif %}
+            </a>
+            <div>
+                <div class="text-lg font-semibold text-slate-600">Quick links</div>
+                <ul class="mt-3 grid gap-2 text-lg text-slate-700">
+                    {% for item in site.menu %}
+                        <li><a href="{{ item.url }}">{{ item.label }}</a></li>
+                    {% endfor %}
+                    <li><a href="/pages/suncamel-terms-and-conditions">Terms &amp; Conditions</a></li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="mt-10 flex flex-wrap items-center justify-between gap-4 text-xs text-slate-500">
+            <div>2026 {{ site.name }}. All rights reserved.</div>
+            <div class="flex items-center gap-3">
+                {% for social in site.socials %}
+                    <a href="{{ social.url }}" target="_blank" rel="noopener noreferrer" class="inline-flex h-8 w-8 items-center justify-center rounded-full bg-white text-blue-800 shadow-sm">
+                        {% set label = social.label|lower %}
+                        {% if 'facebook' in label %}
+                            <svg class="h-6 w-6" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                                <path d="M13.5 9.5V7.8c0-.8.5-1.2 1.2-1.2h1.5V4h-2.2C11.8 4 11 5.3 11 7.6v1.9H9v2.6h2V20h2.5v-7.9h2.2l.4-2.6h-2.6z"/>
+                            </svg>
+                        {% elseif 'instagram' in label %}
+                            <svg class="h-6 w-6" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                                <path d="M7 3h10a4 4 0 0 1 4 4v10a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4V7a4 4 0 0 1 4-4zm5 5a4 4 0 1 0 0 8 4 4 0 0 0 0-8zm6.5-.5a1 1 0 1 0-2 0 1 1 0 0 0 2 0zM12 10a2 2 0 1 1 0 4 2 2 0 0 1 0-4z"/>
+                            </svg>
+                        {% else %}
+                            {{ social.label|slice(0,1) }}
+                        {% endif %}
+                    </a>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</footer>

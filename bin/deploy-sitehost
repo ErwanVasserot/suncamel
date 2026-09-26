@@ -1,0 +1,30 @@
+#!/usr/bin/env sh
+
+set -eu
+
+project_dir=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+cd "$project_dir"
+
+if [ ! -f composer.json ] || [ ! -f bin/console ]; then
+    echo "SunCamel project root could not be resolved." >&2
+    exit 1
+fi
+
+export APP_ENV=prod
+export APP_DEBUG=0
+
+echo "Installing production dependencies..."
+composer install --no-dev --prefer-dist --no-interaction --no-progress --optimize-autoloader
+
+echo "Building CSS and public assets..."
+php bin/console tailwind:build --minify --env=prod --no-debug
+php bin/console asset-map:compile --env=prod --no-debug
+
+echo "Applying database migrations..."
+php bin/console doctrine:migrations:migrate --no-interaction --allow-no-migration --env=prod --no-debug
+
+echo "Refreshing the production cache..."
+php bin/console cache:clear --env=prod --no-debug
+php bin/console cache:warmup --env=prod --no-debug
+
+echo "SunCamel deployment completed successfully."

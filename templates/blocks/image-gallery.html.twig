@@ -1,0 +1,13 @@
+{% set data = block.data ?? {} %}
+<section class="py-16">
+    <div class="container">
+        {% if data.title is defined %}
+            <h2 class="text-center text-2xl font-semibold">{{ data.title|raw }}</h2>
+        {% endif %}
+        <div class="mt-6 grid gap-4 md:grid-cols-4">
+            {% for image in data.images ?? [] %}
+                <img class="h-44 w-full rounded-2xl object-cover shadow-[0_12px_30px_rgba(10,18,38,0.12)]" src="{{ image }}" alt="">
+            {% endfor %}
+        </div>
+    </div>
+</section>

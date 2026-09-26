@@ -1,0 +1,125 @@
+<header class="contents" id="header" data-controller="menu rental-period">
+    <section class="bg-blue-800 text-white text-base py-2">
+        <div class="grid w-full grid-cols-1 items-center gap-1 px-4 text-center md:grid-cols-[1fr_auto_1fr] md:gap-4">
+            <span class="justify-self-center md:justify-self-start md:text-left">Call us | <a class="font-semibold text-amber-300" href="{{ site.phone_link }}">{{ site.phone }}</a></span>
+            <span class="text-center">{{ site.topbar_message }}</span>
+            <span class="hidden md:block" aria-hidden="true"></span>
+        </div>
+    </section>
+
+    <section class="sticky top-0 z-40 border-b border-slate-200 bg-white">
+        <div class="container header-main py-4">
+            <a href="/" class="header-logo flex items-center gap-3">
+                <img class="w-auto" style="height: 84px" src="{{ site.logo }}" alt="{{ site.name }}">
+            </a>
+
+            <div class="header-period flex items-center justify-center">
+                <button class="btn btn-primary w-full gap-3 px-4 text-center text-base md:w-auto md:whitespace-nowrap" type="button" data-action="rental-period#open">
+                    <i class="fa-regular fa-calendar text-lg" aria-hidden="true"></i>
+                    <span data-rental-period-target="buttonLabel">Select a rental period: View prices and availability</span>
+                </button>
+            </div>
+
+            <div class="header-actions flex items-center justify-end gap-3">
+                <button class="btn btn-primary text-lg px-4" type="button" data-action="menu#toggle" data-menu-target="button">
+                    <span>Menu</span>
+                    <span class="ml-2 inline-flex h-4 w-4 flex-col justify-center gap-1">
+                        <span class="h-0.5 w-4 bg-white"></span>
+                        <span class="h-0.5 w-4 bg-white"></span>
+                        <span class="h-0.5 w-4 bg-white"></span>
+                    </span>
+                </button>
+                {% set cartCount = app.session.get('rental_cart', [])|length %}
+                <a class="relative inline-flex h-11 w-11 items-center justify-center rounded-full border border-blue-800 bg-white text-blue-800 shadow-[0_6px_18px_rgba(15,47,143,0.2)]" href="{{ path('cart_show') }}" aria-label="Cart{% if cartCount %}, {{ cartCount }} item{% if cartCount > 1 %}s{% endif %}{% endif %}">
+                    <i class="fa-solid fa-cart-shopping text-2xl" aria-hidden="true"></i>
+                    {% if cartCount %}<span class="absolute -right-1 -top-1 grid h-5 min-w-5 place-items-center rounded-full bg-amber-300 px-1 text-xs font-bold text-blue-950">{{ cartCount }}</span>{% endif %}
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <div class="menu-backdrop" data-menu-target="backdrop" data-action="click->menu#close"></div>
+    <nav class="menu-panel" data-menu-target="panel" aria-hidden="true">
+        <div class="flex items-center justify-between">
+            <span class="text-3xl font-semibold">Menu</span>
+            <button class="text-3xl" type="button" data-action="menu#close">×</button>
+        </div>
+        <ul class="mt-8 grid gap-2 text-2xl font-semibold">
+            {% for item in site.menu %}
+                <li><a href="{{ item.url }}">{{ item.label }}</a></li>
+            {% endfor %}
+            {% if is_granted('ROLE_ADMIN') %}
+                <li><a href="/admin">Administration</a></li>
+            {% endif %}
+            {% if app.user %}
+                <li>
+                    <span class="block text-base font-semibold text-slate-500">Logged in as</span>
+                    <span class="block break-all text-xl">{{ app.user.userIdentifier }}</span>
+                </li>
+                <li><a href="/logout">Logout</a></li>
+            {% else %}
+                <li><a href="/login">Login</a></li>
+                <li><a href="/register">Create account</a></li>
+            {% endif %}
+        </ul>
+        <div class="rounded-3xl bg-slate-100 px-6 py-4">
+            <div class="text-lg font-semibold text-slate-600">Follow us on</div>
+            <div class="mt-3 flex items-center gap-3">
+                {% for social in site.socials %}
+                    <a href="{{ social.url }}" target="_blank" rel="noopener noreferrer" class="inline-flex h-10 w-10 items-center justify-center rounded-full bg-white text-blue-800 shadow-sm">
+                        {% set label = social.label|lower %}
+                        {% if 'facebook' in label %}
+                            <svg class="h-8 w-8" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                                <path d="M13.5 9.5V7.8c0-.8.5-1.2 1.2-1.2h1.5V4h-2.2C11.8 4 11 5.3 11 7.6v1.9H9v2.6h2V20h2.5v-7.9h2.2l.4-2.6h-2.6z"/>
+                            </svg>
+                        {% elseif 'instagram' in label %}
+                            <svg class="h-8 w-8" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                                <path d="M7 3h10a4 4 0 0 1 4 4v10a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4V7a4 4 0 0 1 4-4zm5 5a4 4 0 1 0 0 8 4 4 0 0 0 0-8zm6.5-.5a1 1 0 1 0-2 0 1 1 0 0 0 2 0zM12 10a2 2 0 1 1 0 4 2 2 0 0 1 0-4z"/>
+                            </svg>
+                        {% else %}
+                            {{ social.label|slice(0,1) }}
+                        {% endif %}
+                    </a>
+                {% endfor %}
+            </div>
+        </div>
+    </nav>
+
+    <div class="rental-period-dialog" data-rental-period-target="dialog" data-action="click->rental-period#closeOnBackdrop" aria-hidden="true">
+        <section class="rental-period-panel" role="dialog" aria-modal="true" aria-labelledby="rental-period-title">
+            <div class="rental-period-header">
+                <h2 id="rental-period-title">Cart</h2>
+                <button class="rental-period-close" type="button" data-action="rental-period#close" aria-label="Close rental period calendar">×</button>
+            </div>
+
+            <div class="rental-period-card">
+                <div class="rental-period-summary">
+                    <div>
+                        <span class="rental-period-label">Rental duration</span>
+                        <strong data-rental-period-target="duration">-</strong>
+                    </div>
+                    <div>
+                        <span class="rental-period-label">Pickup</span>
+                        <strong data-rental-period-target="pickupDate">-</strong>
+                    </div>
+                    <i class="fa-solid fa-arrow-right rental-period-arrow" aria-hidden="true"></i>
+                    <div>
+                        <span class="rental-period-label">Return</span>
+                        <strong data-rental-period-target="returnDate">-</strong>
+                    </div>
+                </div>
+
+                <div class="rental-calendar" data-rental-period-target="months"></div>
+
+                <button class="rental-period-clear" type="button" data-action="rental-period#clear">
+                    <span aria-hidden="true">×</span>
+                    <span>Clear dates</span>
+                </button>
+            </div>
+
+            <div class="rental-period-actions">
+                <button class="btn btn-primary rental-period-apply" type="button" data-action="rental-period#apply">Apply</button>
+            </div>
+        </section>
+    </div>
+</header>

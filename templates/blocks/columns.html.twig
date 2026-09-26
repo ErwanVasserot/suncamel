@@ -1,0 +1,24 @@
+{% set data = block.data ?? {} %}
+{% set items = data.items ?? [] %}
+
+<section class="py-16">
+    <div class="container grid gap-6 md:grid-cols-3">
+        {% for item in items %}
+            <article class="rounded-4xl bg-white p-7 shadow-[0_18px_50px_rgba(10,18,38,0.12)] grid gap-4">
+                <h2 class="text-4xl font-semibold">{{ item.title }}</h2>
+                {% if item.html is defined %}
+                    <div class="text-base text-slate-600 leading-relaxed">{{ item.html|raw }}</div>
+                {% endif %}
+                {% if item.action is defined %}
+                    <a
+                        class="btn btn-soft text-[13px] w-fit"
+                        href="{{ item.action.url }}"
+                        {% if item.action.url starts with 'http' %}target="_blank" rel="noopener noreferrer"{% endif %}
+                    >
+                        {{ item.action.label }}
+                    </a>
+                {% endif %}
+            </article>
+        {% endfor %}
+    </div>
+</section>

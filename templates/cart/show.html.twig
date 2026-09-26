@@ -1,0 +1,62 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Your cart | {{ site.name }}{% endblock %}
+
+{% block body %}
+    {% include 'partials/header.html.twig' %}
+    <main class="page-gradient py-12">
+        <section class="container">
+            <h1 class="text-4xl font-semibold">Your rental cart</h1>
+
+            {% for message in app.flashes('error') %}
+                <div class="mt-6 rounded-xl bg-red-50 p-4 font-semibold text-red-700">{{ message }}</div>
+            {% endfor %}
+            {% for message in app.flashes('success') %}
+                <div class="mt-6 rounded-xl bg-green-50 p-4 font-semibold text-green-700">{{ message }}</div>
+            {% endfor %}
+
+            {% if items is empty %}
+                <div class="mt-8 rounded-2xl bg-white p-8 shadow-sm ring-1 ring-slate-200">
+                    <p class="text-lg text-slate-600">Your cart is empty.</p>
+                    <a class="btn btn-primary mt-6" href="/collections/all">Choose a bike</a>
+                </div>
+            {% else %}
+                <div class="mt-8 grid gap-8 lg:grid-cols-[1fr_340px]">
+                    <div class="grid gap-4">
+                        {% for item in items %}
+                            <article class="grid gap-5 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200 sm:grid-cols-[160px_1fr_auto]">
+                                <img class="h-36 w-full rounded-xl object-contain" src="{{ fallback_asset('/images/suncamel/products/' ~ item.product.coverImage) }}" alt="{{ item.product.title }}">
+                                <div>
+                                    <h2 class="text-xl font-semibold">{{ item.product.title }}</h2>
+                                    <p class="mt-2 text-slate-600">{{ item.pickup|date('d M Y, H:i') }} → {{ item.return|date('d M Y, H:i') }}</p>
+                                    <p class="mt-1 text-slate-600">{{ item.days }} day{{ item.days > 1 ? 's' : '' }} · Quantity {{ item.quantity }}</p>
+                                    {% if not availability[item.key] %}<p class="mt-2 font-semibold text-red-600">No longer available for this period.</p>{% endif %}
+                                </div>
+                                <div class="flex flex-col items-end justify-between gap-4">
+                                    <strong class="text-lg">NZ${{ (item.total_amount / 100)|number_format(2, '.', ',') }}</strong>
+                                    <form method="post" action="{{ path('cart_remove', {key: item.key}) }}">
+                                        <input type="hidden" name="_csrf_token" value="{{ csrf_token('cart_remove_' ~ item.key) }}">
+                                        <button class="text-sm font-semibold text-red-600 underline" type="submit">Remove</button>
+                                    </form>
+                                </div>
+                            </article>
+                        {% endfor %}
+                    </div>
+                    <aside class="h-fit rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
+                        <div class="flex justify-between text-xl font-semibold"><span>Total</span><span>NZ${{ (total_amount / 100)|number_format(2, '.', ',') }}</span></div>
+                        <p class="mt-2 text-sm text-slate-500">The total is calculated from the number of rental days.</p>
+                        {% if app.user %}
+                            <form class="mt-6" method="post" action="{{ path('checkout_create') }}">
+                                <input type="hidden" name="_csrf_token" value="{{ csrf_token('checkout') }}">
+                                <button class="btn btn-primary w-full" type="submit"{{ false in availability ? ' disabled' : '' }}>Proceed to payment</button>
+                            </form>
+                        {% else %}
+                            <a class="btn btn-primary mt-6 w-full" href="{{ path('app_login') }}">Login to checkout</a>
+                        {% endif %}
+                    </aside>
+                </div>
+            {% endif %}
+        </section>
+    </main>
+    {% include 'partials/footer.html.twig' %}
+{% endblock %}

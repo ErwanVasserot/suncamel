@@ -1,0 +1,76 @@
+{% set data = block.data ?? {} %}
+<section class="py-16 bg-slate-50" data-controller="product-detail">
+    <div class="container grid items-start gap-10 md:grid-cols-[1fr_1fr]">
+        <div class="grid gap-4 md:overflow-y-auto md:pr-3" data-product-detail-target="gallery">
+            {% if data.gallery is defined %}
+                {% for image in data.gallery %}
+                    {% if loop.first %}
+                        <div
+                            class="relative h-100 w-full overflow-hidden rounded-3xl bg-white shadow-[0_18px_50px_rgba(10,18,38,0.12)] touch-none cursor-grab"
+                            data-controller="product-image"
+                            data-action="wheel->product-image#wheel pointerdown->product-image#startDrag pointermove->product-image#drag pointerup->product-image#endDrag pointercancel->product-image#endDrag"
+                        >
+                            <img
+                                class="h-full w-full object-contain transition-transform duration-150 ease-out select-none"
+                                src="{{ image }}"
+                                alt="{{ data.title }}"
+                                draggable="false"
+                                data-product-image-target="image"
+                            >
+                            <div class="absolute right-3 top-3 flex overflow-hidden rounded-full bg-white/90 shadow-[0_8px_24px_rgba(10,18,38,0.18)] ring-1 ring-slate-200">
+                                <button class="grid h-9 w-9 place-items-center text-base font-semibold text-slate-900 transition hover:bg-slate-100" type="button" aria-label="Zoomer" data-action="product-image#zoomIn">+</button>
+                                <button class="grid h-9 w-9 place-items-center border-x border-slate-200 text-sm font-semibold text-slate-900 transition hover:bg-slate-100" type="button" aria-label="Reinitialiser" data-action="product-image#reset">1:1</button>
+                                <button class="grid h-9 w-9 place-items-center text-base font-semibold text-slate-900 transition hover:bg-slate-100" type="button" aria-label="Dezoomer" data-action="product-image#zoomOut">-</button>
+                            </div>
+                        </div>
+                    {% else %}
+                        <div class="relative h-100 w-full overflow-hidden rounded-3xl bg-white shadow-[0_18px_50px_rgba(10,18,38,0.12)]">
+                            <img
+                                class="h-full w-full object-contain scale-150"
+                                src="{{ image }}"
+                                alt="{{ data.title }}"
+                            >
+                        </div>
+                    {% endif %}
+                {% endfor %}
+            {% endif %}
+        </div>
+        <div class="grid grid-rows-[auto_1fr_auto] items-start gap-4 bg-white rounded-3xl p-8 shadow-[0_18px_50px_rgba(10,18,38,0.12)]" data-product-detail-target="details">
+            <h2 class="text-2xl font-semibold">{{ data.title ?? '' }}</h2>
+            <div class="grid self-center gap-4">
+                {% if data.summary is defined %}
+                    <p class="text-base text-slate-600 leading-relaxed">{{ data.summary }}</p>
+                {% endif %}
+                <div class="flex items-baseline gap-2 text-lg font-semibold">
+                    <span>{{ data.price }}</span>
+                    <span class="text-sm text-slate-500">/ {{ data.duration }}</span>
+                </div>
+                {% if data.highlights is defined %}
+                    <ul class="grid gap-2 text-base text-slate-600 list-disc pl-4">
+                        {% for item in data.highlights %}
+                            <li>{{ item }}</li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+                {% if data.specs is defined %}
+                    <div>
+                        <h3 class="text-base font-semibold">Specs</h3>
+                        <ul class="mt-2 grid gap-2 text-base text-slate-600 list-disc pl-4">
+                            {% for item in data.specs %}
+                                <li>{{ item }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                {% endif %}
+            </div>
+            {% if data.cta is defined %}
+                <form class="self-end" method="post" action="{{ path('cart_add', { slug: data.slug }) }}" data-controller="cart" data-action="submit->cart#prepare">
+                    <input type="hidden" name="_csrf_token" value="{{ csrf_token('cart_add_' ~ data.slug) }}">
+                    <input type="hidden" name="pickup" value="{{ app.request.query.get('pickup') }}" data-cart-target="pickup">
+                    <input type="hidden" name="return" value="{{ app.request.query.get('return') }}" data-cart-target="return">
+                    <button class="btn btn-primary text-[14px] w-fit" type="submit">Add to cart</button>
+                </form>
+            {% endif %}
+        </div>
+    </div>
+</section>

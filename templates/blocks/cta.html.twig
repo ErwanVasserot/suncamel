@@ -1,0 +1,17 @@
+{% set data = block.data ?? {} %}
+<section class="py-14">
+    <div class="container">
+        <div class="rounded-[32px] bg-cover bg-center p-14 text-white min-h-[380px] flex items-center" style="background-image: linear-gradient(0deg, rgba(0,0,0,0.25), rgba(0,0,0,0.25)), url('{{ data.image ?? '' }}');">
+            <div class="max-w-[380px] border-white/20 rounded-2xl p-6 shadow-xl">
+                {% if data.title is defined %}
+                    <h2 class="text-4xl font-semibold">{{ data.title }}</h2>
+                {% endif %}
+                <div class="mt-4">
+                    {% if data.primary is defined %}
+                        <a href="{{ data.primary.url }}" class="btn btn-primary text-[14px]">{{ data.primary.label }}</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

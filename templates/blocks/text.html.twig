@@ -1,0 +1,12 @@
+{% set data = block.data ?? {} %}
+{% set variant = data.variant is defined ? data.variant : null %}
+<section class="py-10{% if variant == 'compact' %} py-12{% endif %}{% if variant == 'link' %} py-10{% endif %}">
+    <div class="container text-center">
+        {% if data.title is defined %}
+            <h2 class="text-4xl font-semibold tracking-tight">{{ data.title }}</h2>
+        {% endif %}
+        {% if data.html is defined %}
+            <div class="mx-auto mt-4 max-w-[720px] text-lg text-slate-600 leading-relaxed{% if variant == 'link' %} tracking-wide font-semibold{% endif %}">{{ data.html|raw }}</div>
+        {% endif %}
+    </div>
+</section>

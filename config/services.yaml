@@ -1,0 +1,41 @@
+# yaml-language-server: $schema=../vendor/symfony/dependency-injection/Loader/schema/services.schema.json
+
+# This file is the entry point to configure your own services.
+# Files in the packages/ subdirectory configure your dependencies.
+# See also https://symfony.com/doc/current/service_container/import.html
+
+# Put parameters here that don't need to change on each machine where the app is deployed
+# https://symfony.com/doc/current/best_practices.html#use-parameters-for-application-configuration
+parameters:
+    site:
+        name: 'SunCamel'
+        logo: 'https://images.booqablecdn.com/assets/0656d2e7-232b-48fc-80fd-5f4c9e552385/cmii43wlg096j357qipq2ag79(2).SUNCAMEL-a29378b15f79062aa8a0dd0a16d5b176829b8e9afb2ce9f9718235395d76a382.png'
+        phone: '027 564 5263'
+        phone_link: 'tel:0275645263'
+        topbar_message: 'Book online 24/7 > Local Airbnb delivery available'
+        menu:
+            - { label: 'Home', url: '/' }
+            - { label: 'Book a bike - our products', url: '/collections/all' }
+            - { label: 'FAQs - all the info you need', url: '/pages/faq' }
+            - { label: 'Find us and contact us', url: '/pages/contact-us' }
+        socials:
+            - { label: 'Facebook', url: 'https://www.facebook.com/profile.php?id=61585192325522', icon: 'facebook' }
+            - { label: 'Instagram', url: 'https://www.instagram.com/suncamel.nz', icon: 'instagram' }
+
+services:
+    # default configuration for services in *this* file
+    _defaults:
+        autowire: true      # Automatically injects dependencies in your services.
+        autoconfigure: true # Automatically registers your services as commands, event subscribers, etc.
+
+    # makes classes in src/ available to be used as services
+    # this creates a service per class whose id is the fully-qualified class name
+    App\:
+        resource: '../src/'
+
+    App\Twig\AssetFallbackExtension:
+        bind:
+            $projectDir: '%kernel.project_dir%'
+
+    # add more service definitions when explicit configuration is needed
+    # please note that last definitions always *replace* previous ones

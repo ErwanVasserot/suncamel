@@ -1,0 +1,35 @@
+{% set data = block.data ?? {} %}
+<section class="py-16">
+    <div class="container">
+        <div class="grid gap-6 md:grid-cols-3">
+            {% for item in data.items ?? [] %}
+                {% set itemUrl = item.url %}
+                {% if app.request.query.get('pickup') and app.request.query.get('return') %}
+                    {% set itemUrl = item.url ~ '?pickup=' ~ app.request.query.get('pickup')|url_encode ~ '&return=' ~ app.request.query.get('return')|url_encode %}
+                {% endif %}
+                {% set availability = item.availability ?? 0 %}
+                {% if availability > 0 %}
+                <article class="group rounded-2xl bg-white shadow-[0_18px_50px_rgba(10,18,38,0.12)] ring-1 ring-slate-200 overflow-hidden transition hover:-translate-y-1 hover:shadow-[0_24px_60px_rgba(10,18,38,0.18)]">
+                    <a href="{{ itemUrl }}">
+                        <img class="h-64 w-full object-contain transition duration-300 group-hover:scale-105" src="{{ item.image }}" alt="{{ item.title }}">
+                    </a>
+                    <div class="p-6 grid gap-3">
+                        <span class="w-fit rounded-full bg-green-500 px-4 py-1.5 text-sm font-semibold text-white">{{ availability }} available</span>
+                        <h3 class="text-lg font-semibold">{{ item.title }}</h3>
+                        {% if item.summary is defined %}
+                            <p class="text-base text-slate-600 leading-relaxed">{{ item.summary }}</p>
+                        {% endif %}
+                        <div class="flex items-baseline gap-2 font-semibold">
+                            <span>{{ item.price }}</span>
+                            <span class="text-sm text-slate-500">/ {{ item.duration }}</span>
+                        </div>
+                        <a class="btn btn-primary text-[14px] w-fit" href="{{ itemUrl }}">View details</a>
+                    </div>
+                </article>
+                {% endif %}
+            {% else %}
+                <p class="md:col-span-3 text-lg font-semibold text-slate-700">No bikes are available for the selected period.</p>
+            {% endfor %}
+        </div>
+    </div>
+</section>

@@ -1,0 +1,30 @@
+{% set data = block.data ?? {} %}
+<section class="py-16">
+    <div class="container text-center">
+        {% if data.title is defined %}
+            <h2 class="text-4xl font-semibold">{{ data.title }}</h2>
+        {% endif %}
+        {% if data.description_html is defined %}
+            <div class="rich-text mt-2 text-lg text-slate-600">{{ data.description_html|raw }}</div>
+        {% endif %}
+        <ul class="mx-auto mt-6 grid max-w-[820px] gap-4 text-left">
+            {% for item in data.items ?? [] %}
+                <li class="rounded-lg border border-slate-300 bg-white">
+                    <details class="group">
+                        <summary class="flex cursor-pointer list-none items-center justify-between px-4 py-3 text-xl font-semibold">
+                            <span>{{ item.question }}</span>
+                            <span class="text-emerald-500 transition group-open:rotate-90">›</span>
+                        </summary>
+                        <div class="rich-text px-4 pb-4 text-xl text-slate-600 leading-relaxed">
+                            {% if item.answer_html is defined %}
+                                {{ item.answer_html|raw }}
+                            {% else %}
+                                <p>{{ item.answer }}</p>
+                            {% endif %}
+                        </div>
+                    </details>
+                </li>
+            {% endfor %}
+        </ul>
+    </div>
+</section>

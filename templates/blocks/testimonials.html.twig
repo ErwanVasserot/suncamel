@@ -1,0 +1,32 @@
+{% set data = block.data ?? {} %}
+<section class="bg-slate-200 py-16 rounded-3xl">
+    <div class="container grid gap-8 md:grid-cols-[220px_1fr]">
+        <div class="border-r border-slate-300 pr-6">
+            {% if data.title is defined %}
+                <h2 class="text-2xl font-semibold leading-tight">{{ data.title|raw }}</h2>
+            {% endif %}
+            <div class="mt-6 flex gap-2">
+                <button class="inline-flex h-8 w-8 items-center justify-center rounded-full border border-slate-400 text-slate-700" data-action="testimonials#prev">‹</button>
+                <button class="inline-flex h-8 w-8 items-center justify-center rounded-full border border-slate-400 text-slate-700" data-action="testimonials#next">›</button>
+            </div>
+        </div>
+        <div data-controller="testimonials" class="overflow-hidden">
+            <div data-testimonials-target="track" class="flex gap-6 overflow-x-auto scroll-smooth snap-x snap-mandatory pb-4">
+                {% for item in data.items ?? [] %}
+                    <div class="min-w-[280px] snap-start rounded-2xl bg-gradient-to-br from-blue-900 to-blue-800 p-6 text-white shadow-[0_18px_40px_rgba(12,42,122,0.35)]">
+                        <div class="mb-4 text-white/70">
+                            <svg class="h-5 w-5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M9.4 5C6.4 7 4.8 9.5 4.5 12.8c-.2 3.4 1.8 6.2 5.2 6.2 2.4 0 4.3-1.6 4.3-4 0-2.2-1.5-3.8-3.7-3.8-.6 0-1.2.1-1.7.3.5-1.6 1.6-3 3.3-4L9.4 5zm10 0c-3 2-4.6 4.5-4.9 7.8-.2 3.4 1.8 6.2 5.2 6.2 2.4 0 4.3-1.6 4.3-4 0-2.2-1.5-3.8-3.7-3.8-.6 0-1.2.1-1.7.3.5-1.6 1.6-3 3.3-4L19.4 5z"/></svg>
+                        </div>
+                        <blockquote class="text-base leading-relaxed">
+                            <p>{{ item.quote }}</p>
+                        </blockquote>
+                        <div class="mt-6 text-sm font-semibold">
+                            {{ item.author }}
+                            {% if item.date is defined %}<div class="text-xs text-white/70">{{ item.date }}</div>{% endif %}
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</section>

@@ -1,0 +1,16 @@
+<nav class="border-b border-slate-200 bg-white" aria-label="Breadcrumb">
+    <ol class="container flex flex-wrap items-center gap-2 py-3 text-sm text-slate-600">
+        {% for item in breadcrumbs %}
+            <li class="flex items-center gap-2">
+                {% if not loop.first %}
+                    <span class="text-slate-400" aria-hidden="true">/</span>
+                {% endif %}
+                {% if item.url %}
+                    <a class="transition hover:text-blue-800 hover:underline" href="{{ item.url }}">{{ item.label }}</a>
+                {% else %}
+                    <span class="font-semibold text-slate-900" aria-current="page">{{ item.label }}</span>
+                {% endif %}
+            </li>
+        {% endfor %}
+    </ol>
+</nav>

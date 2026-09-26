@@ -1,0 +1,27 @@
+{% set data = block.data ?? {} %}
+<section class="relative text-white">
+    <div class="bg-cover bg-center" style="background-image: linear-gradient(127deg, rgba(0,0,0,0.25), rgba(0,0,0,0.05)), url('{{ data.image ?? '' }}');">
+        <div class="container py-24 min-h-[600px] flex items-center">
+            <div class="max-w-[460px]">
+                {% if data.title_html is defined %}
+                    <h1 class="font-extrabold leading-[1.05] drop-shadow-[0_12px_30px_rgba(0,0,0,0.25)] text-7xl">{{ data.title_html|raw }}</h1>
+                {% else %}
+                    <h1 class="font-extrabold leading-[1.05] drop-shadow-[0_12px_30px_rgba(0,0,0,0.25)] text-7xl">{{ data.title ?? '' }}</h1>
+                {% endif %}
+                {% if data.subtitle_html is defined %}
+                    <div class="mt-4 text-white/85 text-base leading-relaxed">{{ data.subtitle_html|raw }}</div>
+                {% elseif data.subtitle is defined %}
+                    <p class="mt-4 text-white/85 text-base leading-relaxed">{{ data.subtitle }}</p>
+                {% endif %}
+                <div class="mt-8 flex flex-wrap gap-4">
+                    {% if data.primary is defined %}
+                        <a href="{{ data.primary.url }}" class="btn btn-primary text-[14px] shadow-[0_12px_30px_rgba(12,42,122,0.35)]">{{ data.primary.label }}</a>
+                    {% endif %}
+                    {% if data.secondary is defined %}
+                        <a href="{{ data.secondary.url }}" class="btn btn-outline text-[14px]">{{ data.secondary.label }}</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

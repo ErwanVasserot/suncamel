@@ -1,0 +1,35 @@
+{% extends 'base.html.twig' %}
+
+{% set meta = page.meta ?? {} %}
+
+{% block title %}{{ meta.title ?? page.title ?? site.name }}{% endblock %}
+
+{% block meta %}
+    {% if meta.description is defined %}
+        <meta name="description" content="{{ meta.description }}">
+    {% endif %}
+    {% if meta.og_image is defined %}
+        <meta property="og:image" content="{{ meta.og_image }}">
+    {% endif %}
+{% endblock %}
+
+{% block body %}
+    {% include 'partials/header.html.twig' %}
+
+    <main id="main" class="page-gradient">
+        {% for message in app.flashes('error') %}
+            <div class="container py-4"><div class="rounded-xl bg-red-50 p-4 font-semibold text-red-700">{{ message }}</div></div>
+        {% endfor %}
+        {% for message in app.flashes('success') %}
+            <div class="container py-4"><div class="rounded-xl bg-green-50 p-4 font-semibold text-green-700">{{ message }}</div></div>
+        {% endfor %}
+        {% if breadcrumbs is defined and breadcrumbs is not empty %}
+            {% include 'partials/breadcrumbs.html.twig' with { breadcrumbs: breadcrumbs } only %}
+        {% endif %}
+        {% for block in page.blocks %}
+            {% include 'blocks/' ~ block.type ~ '.html.twig' with { block: block } only %}
+        {% endfor %}
+    </main>
+
+    {% include 'partials/footer.html.twig' %}
+{% endblock %}

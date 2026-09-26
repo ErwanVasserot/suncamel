@@ -1,0 +1,22 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ title }} | {{ site.name }}{% endblock %}
+
+{% block body %}
+    {% include 'partials/header.html.twig' %}
+
+    <main class="page-gradient py-16">
+        <section class="container max-w-[680px]">
+            <div class="rounded-2xl bg-white p-8 shadow-[0_18px_50px_rgba(10,18,38,0.12)] ring-1 ring-slate-200">
+                <h1 class="text-3xl font-semibold">{{ title }}</h1>
+                <p class="mt-4 text-base leading-relaxed text-slate-600">{{ message }}</p>
+                {% if session_id %}
+                    <p class="mt-4 text-sm text-slate-500">Stripe session: {{ session_id }}</p>
+                {% endif %}
+                <a class="btn btn-primary mt-6 text-[14px]" href="/collections/all">Back to rental bikes</a>
+            </div>
+        </section>
+    </main>
+
+    {% include 'partials/footer.html.twig' %}
+{% endblock %}

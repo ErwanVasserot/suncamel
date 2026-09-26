@@ -1,0 +1,24 @@
+{% set data = block.data ?? {} %}
+<section class="py-4 pb-20">
+    <div class="container">
+        <div class="grid gap-8 lg:grid-cols-3 lg:gap-4">
+            {% for item in data.items ?? [] %}
+                <a href="{{ item.url }}" class="group relative overflow-hidden rounded-2xl ring-1 ring-white/10 shadow-[0_18px_50px_rgba(10,18,38,0.2)] transition hover:-translate-y-1">
+                    {% if item.image is defined %}
+                        <img class="h-64 w-full object-cover transition duration-300 group-hover:scale-105 md:h-96 lg:h-[580px]" src="{{ item.image }}" alt="{{ item.title }}">
+                    {% endif %}
+                    <span class="absolute inset-0 bg-gradient-to-t from-blue-950/80 via-blue-900/10 to-transparent"></span>
+                    <span class="absolute inset-x-0 bottom-0 flex items-end justify-between px-6 pb-6 text-white transition duration-300 lg:px-8 lg:pb-8">
+                        <span class="text-2xl font-semibold leading-tight lg:text-3xl">{{ item.title }}</span>
+
+                        <span class="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-white opacity-0 transition duration-300 group-hover:opacity-100">
+                            <svg class="h-5 w-5" fill="none" viewBox="0 0 16 17" xmlns="http://www.w3.org/2000/svg">
+                                <path d="m8 .128418-1.41 1.410002 5.58 5.59h-12.17v2h12.17l-5.58 5.58998 1.41 1.41 8-7.99998z" fill="#1A3333"/>
+                            </svg>
+                        </span>
+                    </span>
+                </a>
+            {% endfor %}
+        </div>
+    </div>
+</section>
