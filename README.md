@@ -420,7 +420,7 @@ Les migrations de base ne doivent pas être annulées automatiquement. Toute res
 
 ## Préproduction Docker temporaire
 
-La préproduction utilise `compose.preprod.yaml` et reste isolée des versions de PHP et de MariaDB installées sur l’hôte. Le service HTTP écoute uniquement sur `127.0.0.1:8081` afin d’être publié par le reverse proxy Nginx du VPS.
+La préproduction utilise `compose.preprod.yaml` et reste isolée des versions de PHP et de MariaDB installées sur l’hôte. Le service HTTP écoute uniquement sur `127.0.0.1:18081` afin d’être publié par le reverse proxy Nginx du VPS.
 
 Créer la configuration locale au déploiement :
 
