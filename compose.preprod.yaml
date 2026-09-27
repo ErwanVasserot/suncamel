@@ -1,0 +1,49 @@
+name: suncamel-preprod
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile.preprod
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:${SUNCAMEL_HTTP_PORT:-8081}:80"
+    environment:
+      APP_ENV: prod
+      APP_DEBUG: 0
+      APP_SECRET: ${APP_SECRET:?APP_SECRET must be set}
+      DEFAULT_URI: ${DEFAULT_URI:?DEFAULT_URI must be set}
+      DATABASE_URL: mysql://suncamel:${MARIADB_PASSWORD:?MARIADB_PASSWORD must be set}@database:3306/suncamel?serverVersion=10.11.14-MariaDB&charset=utf8mb4
+      MESSENGER_TRANSPORT_DSN: doctrine://default?auto_setup=0
+      MAILER_DSN: ${MAILER_DSN:-null://null}
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-}
+      STRIPE_CURRENCY: ${STRIPE_CURRENCY:-nzd}
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-}
+      TRUSTED_PROXIES: REMOTE_ADDR
+    depends_on:
+      database:
+        condition: service_healthy
+    volumes:
+      - product_images:/var/www/html/public/images/suncamel/products
+      - app_var:/var/www/html/var
+
+  database:
+    image: mariadb:10.11
+    restart: unless-stopped
+    environment:
+      MARIADB_DATABASE: suncamel
+      MARIADB_USER: suncamel
+      MARIADB_PASSWORD: ${MARIADB_PASSWORD:?MARIADB_PASSWORD must be set}
+      MARIADB_ROOT_PASSWORD: ${MARIADB_ROOT_PASSWORD:?MARIADB_ROOT_PASSWORD must be set}
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    volumes:
+      - database_data:/var/lib/mysql
+
+volumes:
+  app_var:
+  database_data:
+  product_images:

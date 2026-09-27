@@ -418,6 +418,37 @@ git checkout <commit-stable>
 
 Les migrations de base ne doivent pas être annulées automatiquement. Toute restauration de base doit être préparée et accompagnée d’une sauvegarde.
 
+## Préproduction Docker temporaire
+
+La préproduction utilise `compose.preprod.yaml` et reste isolée des versions de PHP et de MariaDB installées sur l’hôte. Le service HTTP écoute uniquement sur `127.0.0.1:8081` afin d’être publié par le reverse proxy Nginx du VPS.
+
+Créer la configuration locale au déploiement :
+
+```bash
+cp .env.preprod.example .env.preprod
+```
+
+Remplacer toutes les valeurs d’exemple, puis démarrer la préproduction :
+
+```bash
+sudo docker compose --env-file .env.preprod -f compose.preprod.yaml up -d --build
+sudo docker compose --env-file .env.preprod -f compose.preprod.yaml ps
+```
+
+La base MariaDB, les images produits et les données d’exécution sont conservées dans des volumes dédiés. Un arrêt simple préserve ces données :
+
+```bash
+sudo docker compose --env-file .env.preprod -f compose.preprod.yaml down
+```
+
+La suppression définitive de la préproduction, données comprises, est explicite :
+
+```bash
+sudo docker compose --env-file .env.preprod -f compose.preprod.yaml down --volumes --remove-orphans
+```
+
+Cette dernière commande supprime la base et les images téléversées de préproduction. Elle ne doit être exécutée qu’après avoir confirmé qu’aucune donnée ne doit être conservée.
+
 ## Dépannage
 
 ### Les styles récemment modifiés ne sont pas visibles

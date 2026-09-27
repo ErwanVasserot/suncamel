@@ -26,4 +26,5 @@
 
 # Local deployment overrides and credentials
 /.env.prod.local
+/.env.preprod
 /.sitehost/

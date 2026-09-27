@@ -1,0 +1,10 @@
+.git
+.env.local
+.env.*.local
+.env.preprod
+.idea
+.phpunit.cache
+.vscode
+public/assets
+var
+vendor
