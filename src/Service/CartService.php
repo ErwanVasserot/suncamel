@@ -13,17 +13,19 @@ class CartService
     public function __construct(
         private readonly RequestStack $requestStack,
         private readonly ProductRepository $products,
+        private readonly RentalPricing $pricing,
     ) {
     }
 
-    public function add(Product $product, \DateTimeImmutable $pickup, \DateTimeImmutable $return, int $quantity = 1): void
+    public function add(Product $product, RentalPeriod $period, int $quantity = 1): void
     {
         $items = $this->rawItems();
-        $key = $product->getId() . '_' . $pickup->format('YmdHi') . '_' . $return->format('YmdHi');
+        $key = $product->getId() . '_' . $period->pickup->format('YmdHi') . '_' . $period->return->format('YmdHi');
         $items[$key] = [
             'product_id' => $product->getId(),
-            'pickup' => $pickup->format(DATE_ATOM),
-            'return' => $return->format(DATE_ATOM),
+            'pickup' => $period->pickup->format(DATE_ATOM),
+            'return' => $period->return->format(DATE_ATOM),
+            'slot' => $period->slot,
             'quantity' => max(1, min($quantity, $product->getStockQuantity())),
         ];
         $this->session()->set(self::SESSION_KEY, $items);
@@ -37,7 +39,7 @@ class CartService
     }
 
     /**
-     * @return list<array{key: string, product: Product, pickup: \DateTimeImmutable, return: \DateTimeImmutable, quantity: int, days: int, unit_amount: int, total_amount: int}>
+     * @return list<array{key: string, product: Product, pickup: \DateTimeImmutable, return: \DateTimeImmutable, quantity: int, days: int, slot: string, period_label: string, unit_amount: int, total_amount: int}>
      */
     public function items(): array
     {
@@ -57,10 +59,16 @@ class CartService
 
             $quantity = max(1, (int) ($item['quantity'] ?? 1));
             $days = max(1, (int) $pickup->setTime(0, 0)->diff($return->setTime(0, 0))->days + 1);
-            $unitAmount = $this->priceToCents($product->getPrice());
-            $resolved[] = compact('key', 'product', 'pickup', 'return', 'quantity', 'days', 'unitAmount') + [
-                'unit_amount' => $unitAmount,
-                'total_amount' => $unitAmount * $days * $quantity,
+            $slot = (string) ($item['slot'] ?? RentalPeriod::FULL_DAY);
+            if (in_array($slot, ['morning', 'afternoon'], true)) {
+                $slot = RentalPeriod::HALF_DAY;
+            }
+            $period = new RentalPeriod($pickup, $return, $slot, $days);
+            $price = $this->pricing->calculate($product, $period, $quantity);
+            $resolved[] = compact('key', 'product', 'pickup', 'return', 'quantity', 'days', 'slot') + [
+                'period_label' => $price['label'],
+                'unit_amount' => $price['unit_amount'],
+                'total_amount' => $price['total_amount'],
             ];
         }
 
@@ -95,13 +103,4 @@ class CartService
         return $this->requestStack->getSession();
     }
 
-    private function priceToCents(string $price): int
-    {
-        $normalized = preg_replace('/[^0-9.]/', '', $price) ?? '';
-        if ($normalized === '') {
-            throw new \InvalidArgumentException('Product price is missing.');
-        }
-
-        return (int) round(((float) $normalized) * 100);
-    }
 }

@@ -30,11 +30,15 @@
   .rental-period-header { @apply flex items-center justify-between bg-slate-50 px-6 py-4; }
   .rental-period-header h2 { @apply text-xl font-bold leading-none; }
   .rental-period-close { @apply text-3xl leading-none text-slate-500 transition hover:text-slate-900; }
-  .rental-period-card { @apply m-5 overflow-hidden rounded-xl border border-slate-200 bg-white px-7 py-6 shadow-md; }
+  .rental-period-card { @apply m-5 overflow-y-auto rounded-xl border border-slate-200 bg-white px-7 py-6 shadow-md; }
   .rental-period-summary { @apply grid grid-cols-[1fr_1.15fr_auto_1.15fr] items-start gap-6; }
   .rental-period-label { @apply mb-2 block text-base font-bold; }
   .rental-period-summary strong { @apply inline-block whitespace-pre text-xl font-bold leading-tight decoration-slate-300 decoration-4 underline underline-offset-[10px]; }
   .rental-period-arrow { @apply mt-8 text-xl; }
+  .rental-summary-select { @apply ml-1 min-w-24 border-0 border-b-4 border-slate-300 bg-transparent px-0 pb-1 pt-0 text-xl font-bold leading-tight text-slate-900 outline-none; }
+  .rental-summary-select:focus { @apply border-blue-600; }
+  .rental-summary-select:disabled { @apply cursor-default text-slate-700 opacity-100; }
+  .rental-period-pricing { @apply mt-3 text-right text-xs text-slate-400; }
   .rental-calendar { @apply relative mt-7 grid grid-cols-2 gap-12 px-7 pb-6; }
   .rental-calendar-month h3 { @apply mb-4 text-center text-lg font-bold; }
   .rental-calendar-weekdays { @apply mb-4 grid grid-cols-7 text-center text-base font-bold text-slate-600; }

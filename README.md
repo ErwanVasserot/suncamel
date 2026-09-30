@@ -13,6 +13,8 @@ Site de location de vélos électriques à Raglan, développé avec Symfony. Il 
 - Réservation temporaire du stock pendant le paiement.
 - Paiement avec Stripe Checkout.
 - Confirmation fiable des paiements par webhook Stripe.
+- Créneaux demi-journée (08:00–12:00 ou 12:00–16:00), journée et séjours de plusieurs jours.
+- Tarifs demi-journée, journée et paliers dégressifs administrables par produit.
 - Inscription, connexion et rôles utilisateur/administrateur.
 - Gestion des produits, images, FAQ, utilisateurs et réservations avec EasyAdmin.
 - Contenu statique de secours lorsque certaines données ne sont pas disponibles en base.
@@ -164,6 +166,12 @@ Une transaction et un verrou pessimiste sur le produit protègent la création d
 
 Le fuseau métier utilisé pour les dates de location est `Pacific/Auckland`.
 
+## Tarification des locations
+
+Chaque produit possède un prix demi-journée et un prix journée. Sur une seule date, la demi-journée commence à 08:00 ou 12:00 et le retour est calculé quatre heures plus tard ; la journée complète couvre 08:00–16:00. Pour plusieurs dates, le départ peut être fixé à 08:00, 12:00 ou 16:00 et le retour à 08:00, 12:00 ou 16:00, sans modifier le prix calculé sur le nombre de journées inclusives.
+
+Les paliers dégressifs se configurent dans **Administration > Tarifs dégressifs**. Un palier associe un nombre minimum de jours à un prix journalier. Pour une durée donnée, le palier le plus élevé atteint s’applique à l’ensemble des jours. Sans palier applicable, le prix journée du produit est utilisé.
+
 ## Administration
 
 L’administration est disponible sur :
@@ -175,6 +183,7 @@ L’administration est disponible sur :
 Elle nécessite le rôle `ROLE_ADMIN` et permet de gérer :
 
 - les produits et leur stock ;
+- les prix demi-journée, journée et les paliers dégressifs ;
 - les images des produits ;
 - les questions et réponses de la FAQ ;
 - les utilisateurs et leurs rôles ;

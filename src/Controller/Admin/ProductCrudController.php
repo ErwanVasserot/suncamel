@@ -9,6 +9,7 @@ use EasyCorp\Bundle\EasyAdminBundle\Field\BooleanField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\IdField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\ImageField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\IntegerField;
+use EasyCorp\Bundle\EasyAdminBundle\Field\MoneyField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\SlugField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\TextareaField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\TextField;
@@ -27,8 +28,12 @@ class ProductCrudController extends AbstractCrudController
         yield SlugField::new('slug')->setTargetFieldName('title');
         yield TextField::new('tagline', 'Accroche');
         yield TextareaField::new('summary', 'Description');
-        yield TextField::new('price', 'Prix');
-        yield TextField::new('duration', 'Duree');
+        yield MoneyField::new('halfDayAmount', 'Prix demi-journée')
+            ->setCurrency('NZD')->setStoredAsCents()
+            ->setHelp('Créneaux 08:00–12:00 et 12:00–16:00.');
+        yield MoneyField::new('fullDayAmount', 'Prix journée')
+            ->setCurrency('NZD')->setStoredAsCents()
+            ->setHelp('Journée complète 08:00–16:00 et tarif par défaut pour plusieurs jours.');
         yield TextField::new('collectionSlug', 'Collection')->setHelp('Ex: adventure-bikes, cruiser-e-bikes');
         yield ImageField::new('coverImage', 'Image liste')
             ->setBasePath('/images/suncamel/products')

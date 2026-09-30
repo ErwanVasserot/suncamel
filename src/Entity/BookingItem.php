@@ -51,4 +51,19 @@ class BookingItem
     public function getDayCount(): int { return $this->dayCount; }
     public function setDayCount(int $dayCount): self { $this->dayCount = max(1, $dayCount); return $this; }
     public function getTotalAmount(): int { return $this->unitAmount * $this->dayCount * $this->quantity; }
+    public function getPeriodLabel(): string
+    {
+        if ($this->dayCount > 1) {
+            return $this->dayCount . ' days';
+        }
+
+        $start = $this->pickupAt->format('H:i');
+        $end = $this->returnAt->format('H:i');
+
+        return match ([$start, $end]) {
+            ['08:00', '12:00'] => 'Morning (08:00–12:00)',
+            ['12:00', '16:00'] => 'Afternoon (12:00–16:00)',
+            default => 'Full day (08:00–16:00)',
+        };
+    }
 }

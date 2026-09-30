@@ -37,6 +37,9 @@
         </div>
         <div class="grid grid-rows-[auto_1fr_auto] items-start gap-4 bg-white rounded-3xl p-8 shadow-[0_18px_50px_rgba(10,18,38,0.12)]" data-product-detail-target="details">
             <h2 class="text-2xl font-semibold">{{ data.title ?? '' }}</h2>
+            {% for message in app.flashes('error') %}
+                <div class="rounded-xl bg-red-50 p-4 font-semibold text-red-700">{{ message }}</div>
+            {% endfor %}
             <div class="grid self-center gap-4">
                 {% if data.summary is defined %}
                     <p class="text-base text-slate-600 leading-relaxed">{{ data.summary }}</p>
@@ -64,10 +67,13 @@
                 {% endif %}
             </div>
             {% if data.cta is defined %}
-                <form class="self-end" method="post" action="{{ path('cart_add', { slug: data.slug }) }}" data-controller="cart" data-action="submit->cart#prepare">
+                <form class="self-end" method="post" action="{{ path('cart_add', { slug: data.slug }) }}" data-controller="cart" data-action="submit->cart#prepare" data-turbo="false">
                     <input type="hidden" name="_csrf_token" value="{{ csrf_token('cart_add_' ~ data.slug) }}">
                     <input type="hidden" name="pickup" value="{{ app.request.query.get('pickup') }}" data-cart-target="pickup">
                     <input type="hidden" name="return" value="{{ app.request.query.get('return') }}" data-cart-target="return">
+                    <input type="hidden" name="duration" value="{{ app.request.query.get('duration')|default('full_day') }}" data-cart-target="duration">
+                    <input type="hidden" name="pickup_time" value="{{ app.request.query.get('pickup_time')|default(8) }}" data-cart-target="pickupTime">
+                    <input type="hidden" name="return_time" value="{{ app.request.query.get('return_time')|default(16) }}" data-cart-target="returnTime">
                     <button class="btn btn-primary text-[14px] w-fit" type="submit">Add to cart</button>
                 </form>
             {% endif %}

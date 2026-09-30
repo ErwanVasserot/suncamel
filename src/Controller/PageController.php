@@ -8,6 +8,8 @@ use App\Repository\FaqItemRepository;
 use App\Repository\BookingRepository;
 use App\Repository\PageRepository;
 use App\Repository\ProductRepository;
+use App\Service\RentalPeriodFactory;
+use App\Service\RentalPricing;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
@@ -21,6 +23,8 @@ class PageController extends AbstractController
         private readonly FaqItemRepository $faqItems,
         private readonly BookingRepository $bookings,
         private readonly RequestStack $requestStack,
+        private readonly RentalPeriodFactory $rentalPeriods,
+        private readonly RentalPricing $rentalPricing,
     ) {
     }
 
@@ -876,25 +880,35 @@ HTML,
         }
 
         $availability = $product->getStockQuantity();
+        $selectedPeriod = null;
         $request = $this->requestStack->getCurrentRequest();
         if ($request !== null && $request->query->has('pickup') && $request->query->has('return')) {
             try {
-                $timezone = new \DateTimeZone('Pacific/Auckland');
-                $pickup = new \DateTimeImmutable((string) $request->query->get('pickup') . ' 08:00:00', $timezone);
-                $return = new \DateTimeImmutable((string) $request->query->get('return') . ' 12:00:00', $timezone);
-                $availability = max(0, $availability - $this->bookings->reservedQuantity($product, $pickup, $return));
+                $period = $this->rentalPeriods->fromInput(
+                    (string) $request->query->get('pickup'),
+                    (string) $request->query->get('return'),
+                    (string) $request->query->get('duration', 'full_day'),
+                    (int) $request->query->get('pickup_time', 8),
+                    (int) $request->query->get('return_time', 16),
+                );
+                $selectedPeriod = $period;
+                $availability = max(0, $availability - $this->bookings->reservedQuantity($product, $period->pickup, $period->return));
             } catch (\Exception) {
                 $availability = 0;
             }
         }
+
+        $displayPrice = $selectedPeriod === null
+            ? ['total_amount' => $product->getHalfDayAmount(), 'label' => 'half day']
+            : $this->rentalPricing->calculate($product, $selectedPeriod);
 
         return [
             'slug' => $product->getSlug(),
             'title' => $product->getTitle(),
             'tagline' => $product->getTagline(),
             'summary' => $product->getSummary(),
-            'price' => $product->getPrice(),
-            'duration' => $product->getDuration(),
+            'price' => 'NZ$' . number_format($displayPrice['total_amount'] / 100, 2),
+            'duration' => $displayPrice['label'],
             'availability' => $availability,
             'url' => '/products/' . $product->getSlug(),
             'image' => $this->productImagePath($product->getCoverImage()),

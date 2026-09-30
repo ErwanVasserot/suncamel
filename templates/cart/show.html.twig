@@ -28,8 +28,9 @@
                                 <img class="h-36 w-full rounded-xl object-contain" src="{{ fallback_asset('/images/suncamel/products/' ~ item.product.coverImage) }}" alt="{{ item.product.title }}">
                                 <div>
                                     <h2 class="text-xl font-semibold">{{ item.product.title }}</h2>
-                                    <p class="mt-2 text-slate-600">{{ item.pickup|date('d M Y, H:i') }} → {{ item.return|date('d M Y, H:i') }}</p>
-                                    <p class="mt-1 text-slate-600">{{ item.days }} day{{ item.days > 1 ? 's' : '' }} · Quantity {{ item.quantity }}</p>
+                                    <p class="mt-2 text-slate-600">{{ item.pickup|date('d M Y, H:i', 'Pacific/Auckland') }} → {{ item.return|date('d M Y, H:i', 'Pacific/Auckland') }}</p>
+                                    <p class="mt-1 text-slate-600">{{ item.period_label }} · Quantity {{ item.quantity }}</p>
+                                    <p class="mt-1 text-sm text-slate-500">NZ${{ (item.unit_amount / 100)|number_format(2, '.', ',') }}{% if item.days > 1 %} per day{% endif %}</p>
                                     {% if not availability[item.key] %}<p class="mt-2 font-semibold text-red-600">No longer available for this period.</p>{% endif %}
                                 </div>
                                 <div class="flex flex-col items-end justify-between gap-4">

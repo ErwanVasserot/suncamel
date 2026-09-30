@@ -1,4 +1,4 @@
-<header class="contents" id="header" data-controller="menu rental-period">
+<header class="contents" id="header" data-controller="menu rental-period-v2">
     <section class="bg-blue-800 text-white text-base py-2">
         <div class="grid w-full grid-cols-1 items-center gap-1 px-4 text-center md:grid-cols-[1fr_auto_1fr] md:gap-4">
             <span class="justify-self-center md:justify-self-start md:text-left">Call us | <a class="font-semibold text-amber-300" href="{{ site.phone_link }}">{{ site.phone }}</a></span>
@@ -14,9 +14,9 @@
             </a>
 
             <div class="header-period flex items-center justify-center">
-                <button class="btn btn-primary w-full gap-3 px-4 text-center text-base md:w-auto md:whitespace-nowrap" type="button" data-action="rental-period#open">
+                <button class="btn btn-primary w-full gap-3 px-4 text-center text-base md:w-auto md:whitespace-nowrap" type="button" data-action="rental-period-v2#open">
                     <i class="fa-regular fa-calendar text-lg" aria-hidden="true"></i>
-                    <span data-rental-period-target="buttonLabel">Select a rental period: View prices and availability</span>
+                    <span data-rental-period-v2-target="buttonLabel">Select a rental period: View prices and availability</span>
                 </button>
             </div>
 
@@ -85,40 +85,54 @@
         </div>
     </nav>
 
-    <div class="rental-period-dialog" data-rental-period-target="dialog" data-action="click->rental-period#closeOnBackdrop" aria-hidden="true">
+    <div class="rental-period-dialog" data-rental-period-v2-target="dialog" data-action="click->rental-period-v2#closeOnBackdrop" aria-hidden="true">
         <section class="rental-period-panel" role="dialog" aria-modal="true" aria-labelledby="rental-period-title">
             <div class="rental-period-header">
-                <h2 id="rental-period-title">Cart</h2>
-                <button class="rental-period-close" type="button" data-action="rental-period#close" aria-label="Close rental period calendar">×</button>
+                <h2 id="rental-period-title">Agenda</h2>
+                <button class="rental-period-close" type="button" data-action="rental-period-v2#close" aria-label="Close rental period calendar">×</button>
             </div>
 
             <div class="rental-period-card">
                 <div class="rental-period-summary">
                     <div>
                         <span class="rental-period-label">Rental duration</span>
-                        <strong data-rental-period-target="duration">-</strong>
+                        <strong data-rental-period-v2-target="duration">-</strong>
+                        <select class="rental-summary-select hidden" data-rental-period-v2-target="durationSelect" data-action="change->rental-period-v2#changeDuration" aria-label="Rental duration">
+                            <option value="half_day">Half day</option>
+                            <option value="full_day">Full day</option>
+                        </select>
                     </div>
                     <div>
                         <span class="rental-period-label">Pickup</span>
-                        <strong data-rental-period-target="pickupDate">-</strong>
+                        <strong data-rental-period-v2-target="pickupDate">-</strong>
+                        <select class="rental-summary-select hidden" data-rental-period-v2-target="pickupTimeSelect" data-action="change->rental-period-v2#changePickupTime" aria-label="Pickup time">
+                            {% for hour in [8, 12, 16] %}<option value="{{ hour }}">{{ '%02d'|format(hour) }}:00</option>{% endfor %}
+                        </select>
                     </div>
                     <i class="fa-solid fa-arrow-right rental-period-arrow" aria-hidden="true"></i>
                     <div>
                         <span class="rental-period-label">Return</span>
-                        <strong data-rental-period-target="returnDate">-</strong>
+                        <strong data-rental-period-v2-target="returnDate">-</strong>
+                        <select class="rental-summary-select hidden" data-rental-period-v2-target="returnTimeSelect" data-action="change->rental-period-v2#changeReturnTime" aria-label="Return time">
+                            {% for hour in [8, 12, 16] %}<option value="{{ hour }}">{{ '%02d'|format(hour) }}:00</option>{% endfor %}
+                        </select>
                     </div>
                 </div>
 
-                <div class="rental-calendar" data-rental-period-target="months"></div>
+                <div class="rental-calendar" data-rental-period-v2-target="months"></div>
 
-                <button class="rental-period-clear" type="button" data-action="rental-period#clear">
+                <button class="rental-period-clear" type="button" data-action="rental-period-v2#clear">
                     <span aria-hidden="true">×</span>
                     <span>Clear dates</span>
                 </button>
+
+                <div class="rental-period-pricing">
+                    <span>Multi-day rates are applied automatically. An earlier return time does not change the price.</span>
+                </div>
             </div>
 
             <div class="rental-period-actions">
-                <button class="btn btn-primary rental-period-apply" type="button" data-action="rental-period#apply">Apply</button>
+                <button class="btn btn-primary rental-period-apply" type="button" data-action="rental-period-v2#apply">Apply</button>
             </div>
         </section>
     </div>

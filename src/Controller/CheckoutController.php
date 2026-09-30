@@ -209,8 +209,9 @@ class CheckoutController extends AbstractController
             $body["line_items[$index][quantity]"] = (string) $item->getQuantity();
             $body["line_items[$index][price_data][currency]"] = strtolower($booking->getCurrency());
             $body["line_items[$index][price_data][unit_amount]"] = (string) ($item->getUnitAmount() * $item->getDayCount());
-            $body["line_items[$index][price_data][product_data][name]"] = $product?->getTitle() . ' — ' . $item->getDayCount() . ' day(s)';
-            $body["line_items[$index][price_data][product_data][description]"] = $item->getPickupAt()->format('d M Y H:i') . ' to ' . $item->getReturnAt()->format('d M Y H:i');
+            $body["line_items[$index][price_data][product_data][name]"] = $product?->getTitle() . ' — ' . $item->getPeriodLabel();
+            $timezone = new \DateTimeZone('Pacific/Auckland');
+            $body["line_items[$index][price_data][product_data][description]"] = $item->getPickupAt()->setTimezone($timezone)->format('d M Y H:i') . ' to ' . $item->getReturnAt()->setTimezone($timezone)->format('d M Y H:i');
             $body["line_items[$index][price_data][product_data][metadata][product_slug]"] = $product?->getSlug();
             $body["line_items[$index][price_data][product_data][metadata][pickup]"] = $item->getPickupAt()->format(DATE_ATOM);
             $body["line_items[$index][price_data][product_data][metadata][return]"] = $item->getReturnAt()->format(DATE_ATOM);

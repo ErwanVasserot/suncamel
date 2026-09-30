@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Repository\BookingRepository;
 use App\Repository\ProductRepository;
 use App\Service\CartService;
+use App\Service\RentalPeriodFactory;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -26,7 +27,7 @@ class CartController extends AbstractController
     }
 
     #[Route('/cart/add/{slug}', name: 'cart_add', methods: ['POST'], priority: 30)]
-    public function add(string $slug, Request $request, ProductRepository $products, CartService $cart, BookingRepository $bookings): RedirectResponse
+    public function add(string $slug, Request $request, ProductRepository $products, CartService $cart, BookingRepository $bookings, RentalPeriodFactory $periods): RedirectResponse
     {
         if (!$this->isCsrfTokenValid('cart_add_' . $slug, (string) $request->request->get('_csrf_token'))) {
             throw $this->createAccessDeniedException('Invalid cart token.');
@@ -38,30 +39,24 @@ class CartController extends AbstractController
         }
 
         try {
-            $timezone = new \DateTimeZone('Pacific/Auckland');
-            $pickupValue = (string) $request->request->get('pickup');
-            $returnValue = (string) $request->request->get('return');
-            if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $pickupValue) || !preg_match('/^\d{4}-\d{2}-\d{2}$/', $returnValue)) {
-                throw new \InvalidArgumentException('Invalid date format.');
-            }
-            $pickup = new \DateTimeImmutable($pickupValue . ' 08:00:00', $timezone);
-            $return = new \DateTimeImmutable($returnValue . ' 12:00:00', $timezone);
+            $period = $periods->fromInput(
+                (string) $request->request->get('pickup'),
+                (string) $request->request->get('return'),
+                (string) $request->request->get('duration', 'full_day'),
+                (int) $request->request->get('pickup_time', 8),
+                (int) $request->request->get('return_time', 16),
+            );
         } catch (\Exception) {
             $this->addFlash('error', 'Please select a rental period before adding a bike to the cart.');
             return $this->redirect('/products/' . $slug);
         }
 
-        if ($pickup < new \DateTimeImmutable('today', new \DateTimeZone('Pacific/Auckland')) || $return <= $pickup) {
-            $this->addFlash('error', 'The selected rental period is invalid.');
-            return $this->redirect('/products/' . $slug);
-        }
-
-        if ($bookings->reservedQuantity($product, $pickup, $return) >= $product->getStockQuantity()) {
+        if ($bookings->reservedQuantity($product, $period->pickup, $period->return) >= $product->getStockQuantity()) {
             $this->addFlash('error', 'This bike is no longer available for the selected period.');
             return $this->redirect('/collections/all');
         }
 
-        $cart->add($product, $pickup, $return);
+        $cart->add($product, $period);
         $this->addFlash('success', $product->getTitle() . ' was added to your cart.');
 
         return $this->redirectToRoute('cart_show');

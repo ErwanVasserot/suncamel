@@ -5,7 +5,7 @@
             {% for item in data.items ?? [] %}
                 {% set itemUrl = item.url %}
                 {% if app.request.query.get('pickup') and app.request.query.get('return') %}
-                    {% set itemUrl = item.url ~ '?pickup=' ~ app.request.query.get('pickup')|url_encode ~ '&return=' ~ app.request.query.get('return')|url_encode %}
+                    {% set itemUrl = item.url ~ '?pickup=' ~ app.request.query.get('pickup')|url_encode ~ '&return=' ~ app.request.query.get('return')|url_encode ~ '&duration=' ~ app.request.query.get('duration')|default('full_day')|url_encode ~ '&pickup_time=' ~ app.request.query.get('pickup_time')|default(8)|url_encode ~ '&return_time=' ~ app.request.query.get('return_time')|default(16)|url_encode %}
                 {% endif %}
                 {% set availability = item.availability ?? 0 %}
                 {% if availability > 0 %}

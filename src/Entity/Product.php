@@ -54,6 +54,12 @@ class Product
     #[ORM\Column(type: 'integer', options: ['default' => 1])]
     private int $stockQuantity = 1;
 
+    #[ORM\Column(type: 'integer', options: ['default' => 7900])]
+    private int $halfDayAmount = 7900;
+
+    #[ORM\Column(type: 'integer', options: ['default' => 7900])]
+    private int $fullDayAmount = 7900;
+
     #[ORM\Column(type: 'boolean', options: ['default' => true])]
     private bool $isActive = true;
 
@@ -64,9 +70,17 @@ class Product
     #[ORM\OrderBy(['position' => 'ASC', 'id' => 'ASC'])]
     private Collection $images;
 
+    /**
+     * @var Collection<int, PricingTier>
+     */
+    #[ORM\OneToMany(mappedBy: 'product', targetEntity: PricingTier::class, cascade: ['persist'], orphanRemoval: true)]
+    #[ORM\OrderBy(['minimumDays' => 'ASC'])]
+    private Collection $pricingTiers;
+
     public function __construct()
     {
         $this->images = new ArrayCollection();
+        $this->pricingTiers = new ArrayCollection();
     }
 
     public function __toString(): string
@@ -101,6 +115,10 @@ class Product
     public function setPosition(int $position): self { $this->position = $position; return $this; }
     public function getStockQuantity(): int { return $this->stockQuantity; }
     public function setStockQuantity(int $stockQuantity): self { $this->stockQuantity = max(0, $stockQuantity); return $this; }
+    public function getHalfDayAmount(): int { return $this->halfDayAmount; }
+    public function setHalfDayAmount(int $halfDayAmount): self { $this->halfDayAmount = max(0, $halfDayAmount); return $this; }
+    public function getFullDayAmount(): int { return $this->fullDayAmount; }
+    public function setFullDayAmount(int $fullDayAmount): self { $this->fullDayAmount = max(0, $fullDayAmount); return $this; }
     public function isActive(): bool { return $this->isActive; }
     public function setIsActive(bool $isActive): self { $this->isActive = $isActive; return $this; }
 
@@ -110,5 +128,25 @@ class Product
     public function getImages(): Collection
     {
         return $this->images;
+    }
+
+    /** @return Collection<int, PricingTier> */
+    public function getPricingTiers(): Collection { return $this->pricingTiers; }
+
+    public function addPricingTier(PricingTier $pricingTier): self
+    {
+        if (!$this->pricingTiers->contains($pricingTier)) {
+            $this->pricingTiers->add($pricingTier);
+            $pricingTier->setProduct($this);
+        }
+
+        return $this;
+    }
+
+    public function removePricingTier(PricingTier $pricingTier): self
+    {
+        $this->pricingTiers->removeElement($pricingTier);
+
+        return $this;
     }
 }
