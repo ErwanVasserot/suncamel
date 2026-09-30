@@ -10,6 +10,11 @@ if [ "$#" -gt 0 ] && [ "$1" = "apache2-foreground" ]; then
         --env=prod \
         --no-debug
 
+    echo "Refreshing SunCamel production cache..."
+    php bin/console cache:clear \
+        --env=prod \
+        --no-debug
+
     mkdir -p var public/images/suncamel/products
     chown -R www-data:www-data var public/images/suncamel/products
 fi
