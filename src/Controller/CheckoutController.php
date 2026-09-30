@@ -12,7 +12,6 @@ use Doctrine\DBAL\LockMode;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\HttpFoundation\JsonResponse;
-use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
@@ -33,7 +32,7 @@ class CheckoutController extends AbstractController
     }
 
     #[Route('/checkout', name: 'checkout_create', methods: ['POST'], priority: 30)]
-    public function create(Request $request, CartService $cart, BookingRepository $bookings, EntityManagerInterface $entityManager): RedirectResponse
+    public function create(Request $request, CartService $cart, BookingRepository $bookings, EntityManagerInterface $entityManager): Response
     {
         $this->denyAccessUnlessGranted('ROLE_USER');
         if (!$this->isCsrfTokenValid('checkout', (string) $request->request->get('_csrf_token'))) {
@@ -117,7 +116,9 @@ class CheckoutController extends AbstractController
             throw $exception;
         }
 
-        return $this->redirect($checkoutUrl);
+        return $this->render('checkout/redirect.html.twig', [
+            'checkout_url' => $checkoutUrl,
+        ]);
     }
 
     #[Route('/checkout/success', name: 'checkout_success', methods: ['GET'], priority: 40)]

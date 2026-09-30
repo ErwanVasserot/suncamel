@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="robots" content="noindex">
+        <meta http-equiv="refresh" content="0;url={{ checkout_url|e('html_attr') }}">
+        <title>Redirecting to secure payment</title>
+    </head>
+    <body>
+        <p>Redirecting to secure payment…</p>
+        <p><a href="{{ checkout_url }}">Continue to payment</a></p>
+        <script>
+            window.location.replace({{ checkout_url|json_encode|raw }});
+        </script>
+    </body>
+</html>
