@@ -46,7 +46,7 @@
                         <div class="flex justify-between text-xl font-semibold"><span>Total</span><span>NZ${{ (total_amount / 100)|number_format(2, '.', ',') }}</span></div>
                         <p class="mt-2 text-sm text-slate-500">The total is calculated from the number of rental days.</p>
                         {% if app.user %}
-                            <form class="mt-6" method="post" action="{{ path('checkout_create') }}">
+                            <form class="mt-6" method="post" action="{{ path('checkout_create') }}" data-turbo="false">
                                 <input type="hidden" name="_csrf_token" value="{{ csrf_token('checkout') }}">
                                 <button class="btn btn-primary w-full" type="submit"{{ false in availability ? ' disabled' : '' }}>Proceed to payment</button>
                             </form>
