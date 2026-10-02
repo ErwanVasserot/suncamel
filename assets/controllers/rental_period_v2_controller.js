@@ -7,9 +7,11 @@ const MONTH_NAMES = [
 ];
 
 export default class extends Controller {
+    static values = { closures: Array };
+
     static targets = [
         'dialog', 'months', 'buttonLabel', 'pickupDate', 'returnDate',
-        'duration', 'durationSelect', 'pickupTimeSelect', 'returnTimeSelect',
+        'duration', 'durationSelect', 'pickupTimeSelect', 'returnTimeSelect', 'closureMessage',
     ];
 
     connect() {
@@ -21,6 +23,9 @@ export default class extends Controller {
         this.rentalDuration = 'half_day';
         this.pickupHour = 8;
         this.returnHour = 16;
+        this.closures = (this.closuresValue || []).map((closure) => ({
+            ...closure, startDate: this.parseDate(closure.start), endDate: this.parseDate(closure.end),
+        }));
         this.calendarClickHandler = (event) => {
             const button = event.target.closest('button[data-date]');
             if (!button || button.disabled || !this.monthsTarget.contains(button)) return;
@@ -100,6 +105,8 @@ export default class extends Controller {
         event.stopPropagation();
         const selected = new Date(`${event.currentTarget.dataset.date}T08:00:00`);
         if (this.isPastDate(selected)) return;
+        const selectedClosure = this.closureForDate(selected);
+        if (selectedClosure) { this.showClosureMessage(selectedClosure.message); return; }
 
         if (!this.pickup || this.return || selected < this.pickup) {
             this.pickup = this.stripTime(selected);
@@ -108,6 +115,8 @@ export default class extends Controller {
             this.pickupHour = 8;
             this.returnHour = 16;
         } else {
+            const rangeClosure = this.closureForRange(this.pickup, selected);
+            if (rangeClosure) { this.showClosureMessage(rangeClosure.message); return; }
             this.return = this.stripTime(selected);
             if (!this.isSameDay(this.pickup, this.return)) {
                 this.rentalDuration = 'full_day';
@@ -193,14 +202,16 @@ export default class extends Controller {
 
         for (let day = 1; day <= daysInMonth; day += 1) {
             const current = new Date(year, month, day);
+            const closure = this.closureForDate(current);
             const disabled = this.isPastDate(current);
             const selected = !disabled && (this.isSameDay(current, this.pickup) || this.isSameDay(current, this.return));
             const inRange = !disabled && this.pickup && this.return && current > this.pickup && current < this.return;
             const className = [
-                'rental-calendar-day', disabled ? 'is-disabled' : '',
+                'rental-calendar-day', disabled ? 'is-disabled' : '', closure ? 'is-closed' : '',
                 selected ? 'is-selected' : '', inRange ? 'is-in-range' : '',
             ].filter(Boolean).join(' ');
-            cells.push(`<button class="${className}" type="button" data-date="${this.toIsoDate(current)}"${disabled ? ' disabled aria-disabled="true"' : ''}>${day}</button>`);
+            const closureAttributes = closure ? ` aria-disabled="true" title="${this.escapeAttribute(closure.message)}" data-closure-message="${this.escapeAttribute(closure.message)}" data-action="mouseenter->rental-period-v2#showClosure mouseleave->rental-period-v2#hideClosure focus->rental-period-v2#showClosure blur->rental-period-v2#hideClosure"` : '';
+            cells.push(`<button class="${className}" type="button" data-date="${this.toIsoDate(current)}"${disabled ? ' disabled aria-disabled="true"' : closureAttributes}>${day}</button>`);
         }
 
         return `
@@ -271,7 +282,8 @@ export default class extends Controller {
     }
 
     setSelection(pickup, returnDate, duration = 'half_day', pickupHour = 8, returnHour = 16) {
-        if (!this.isValidDate(pickup) || this.isPastDate(pickup)) {
+        const effectiveReturn = this.isValidDate(returnDate) && returnDate >= pickup ? returnDate : pickup;
+        if (!this.isValidDate(pickup) || this.isPastDate(pickup) || this.closureForRange(pickup, effectiveReturn)) {
             this.clearSelection();
             return;
         }
@@ -326,6 +338,12 @@ export default class extends Controller {
     startOfMonth(date) { return new Date(date.getFullYear(), date.getMonth(), 1); }
     stripTime(date) { return new Date(date.getFullYear(), date.getMonth(), date.getDate()); }
     isPastDate(date) { return this.stripTime(date) < this.minDate; }
+    closureForDate(date) { return this.closures.find((closure) => date >= closure.startDate && date <= closure.endDate); }
+    closureForRange(start, end) { return this.closures.find((closure) => start <= closure.endDate && end >= closure.startDate); }
+    showClosure(event) { this.showClosureMessage(event.currentTarget.dataset.closureMessage || 'Rental is closed'); }
+    hideClosure() { this.closureMessageTarget.classList.remove('is-visible'); this.closureMessageTarget.setAttribute('aria-hidden', 'true'); }
+    showClosureMessage(message) { this.closureMessageTarget.textContent = message || 'Rental is closed'; this.closureMessageTarget.classList.add('is-visible'); this.closureMessageTarget.setAttribute('aria-hidden', 'false'); }
+    escapeAttribute(value) { return String(value).replaceAll('&', '&amp;').replaceAll('"', '&quot;').replaceAll('<', '&lt;').replaceAll('>', '&gt;'); }
     isValidDate(date) { return date instanceof Date && !Number.isNaN(date.getTime()); }
     parseDate(value) { return /^\d{4}-\d{2}-\d{2}$/.test(value) ? new Date(`${value}T08:00:00`) : new Date(value); }
     isSameDay(first, second) { return second && first.getFullYear() === second.getFullYear() && first.getMonth() === second.getMonth() && first.getDate() === second.getDate(); }

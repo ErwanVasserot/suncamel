@@ -127,6 +127,57 @@ class Page
         return $this;
     }
 
+    public function getLegalTitle(): string
+    {
+        foreach ($this->getBlocks() as $block) {
+            if (($block['type'] ?? null) === 'legal') {
+                return (string) ($block['data']['title'] ?? '');
+            }
+        }
+
+        return '';
+    }
+
+    public function setLegalTitle(string $title): self
+    {
+        return $this->updateLegalBlock('title', $title);
+    }
+
+    public function getLegalContent(): string
+    {
+        foreach ($this->getBlocks() as $block) {
+            if (($block['type'] ?? null) === 'legal') {
+                return (string) ($block['data']['html'] ?? '');
+            }
+        }
+
+        return '';
+    }
+
+    public function setLegalContent(string $html): self
+    {
+        return $this->updateLegalBlock('html', $html);
+    }
+
+    private function updateLegalBlock(string $key, string $value): self
+    {
+        $blocks = $this->getBlocks();
+        foreach ($blocks as &$block) {
+            if (($block['type'] ?? null) === 'legal') {
+                $block['data'][$key] = $value;
+                $this->blocks = $blocks;
+
+                return $this;
+            }
+        }
+        unset($block);
+
+        $blocks[] = ['type' => 'legal', 'data' => [$key => $value]];
+        $this->blocks = $blocks;
+
+        return $this;
+    }
+
     public function isPublished(): bool
     {
         return $this->isPublished;

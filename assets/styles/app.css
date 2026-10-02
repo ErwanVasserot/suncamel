@@ -23,6 +23,11 @@
   .menu-panel { @apply fixed top-0 right-0 h-full w-[min(42vw,520px)] bg-white shadow-2xl translate-x-full transition z-50 p-10 grid grid-rows-[auto_1fr_auto] gap-6; }
   .menu-open .menu-backdrop { @apply opacity-100 pointer-events-auto; }
   .menu-open .menu-panel { @apply translate-x-0; }
+  .account-menu { @apply relative; }
+  .account-menu-trigger { @apply flex w-full items-center gap-3 text-left; }
+  .account-submenu { display: none; @apply ml-3 mt-2 gap-1 border-l-2 border-slate-200 pl-4 text-base font-normal text-slate-600; }
+  .account-submenu a { @apply block py-1.5 transition hover:text-blue-800; }
+  .account-menu:hover > .account-submenu { display: grid; }
 
   .rental-period-dialog { @apply fixed inset-0 z-[70] hidden items-center justify-center bg-black/35 px-4 py-5; }
   .rental-period-open .rental-period-dialog { @apply flex; }
@@ -39,6 +44,8 @@
   .rental-summary-select:focus { @apply border-blue-600; }
   .rental-summary-select:disabled { @apply cursor-default text-slate-700 opacity-100; }
   .rental-period-pricing { @apply mt-3 text-right text-xs text-slate-400; }
+  .rental-closure-message { @apply mt-4 min-h-11 rounded-lg bg-red-50 px-4 py-3 text-center text-sm font-semibold text-red-700 opacity-0 transition-opacity; visibility: hidden; }
+  .rental-closure-message.is-visible { @apply opacity-100; visibility: visible; }
   .rental-calendar { @apply relative mt-7 grid grid-cols-2 gap-12 px-7 pb-6; }
   .rental-calendar-month h3 { @apply mb-4 text-center text-lg font-bold; }
   .rental-calendar-weekdays { @apply mb-4 grid grid-cols-7 text-center text-base font-bold text-slate-600; }
@@ -46,6 +53,7 @@
   .rental-calendar-empty { @apply h-9; }
   .rental-calendar-day { @apply mx-auto flex h-9 w-9 items-center justify-center rounded-full text-lg transition hover:bg-blue-50; }
   .rental-calendar-day.is-disabled { @apply cursor-not-allowed text-slate-300 hover:bg-transparent; }
+  .rental-calendar-day.is-closed { @apply cursor-not-allowed bg-red-50 text-red-600 line-through hover:bg-red-100; }
   .rental-calendar-day.is-selected { @apply border-4 border-blue-600; }
   .rental-calendar-day.is-in-range { @apply bg-blue-50; }
   .rental-calendar-nav { @apply absolute top-0 flex h-9 w-9 items-center justify-center rounded-full text-lg transition hover:bg-slate-100; }

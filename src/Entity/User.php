@@ -28,6 +28,12 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(length: 255)]
     private string $password = '';
 
+    #[ORM\Column(length: 64, nullable: true)]
+    private ?string $passwordResetTokenHash = null;
+
+    #[ORM\Column(nullable: true)]
+    private ?\DateTimeImmutable $passwordResetExpiresAt = null;
+
     private ?string $plainPassword = null;
 
     public function __toString(): string
@@ -67,6 +73,18 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     public function getPassword(): string { return $this->password; }
     public function setPassword(string $password): self { $this->password = $password; return $this; }
+    public function getPasswordResetTokenHash(): ?string { return $this->passwordResetTokenHash; }
+    public function setPasswordResetTokenHash(?string $hash): self { $this->passwordResetTokenHash = $hash; return $this; }
+    public function getPasswordResetExpiresAt(): ?\DateTimeImmutable { return $this->passwordResetExpiresAt; }
+    public function setPasswordResetExpiresAt(?\DateTimeImmutable $expiresAt): self { $this->passwordResetExpiresAt = $expiresAt; return $this; }
+
+    public function clearPasswordReset(): self
+    {
+        $this->passwordResetTokenHash = null;
+        $this->passwordResetExpiresAt = null;
+
+        return $this;
+    }
     public function getPlainPassword(): ?string { return $this->plainPassword; }
     public function setPlainPassword(?string $plainPassword): self { $this->plainPassword = $plainPassword; return $this; }
 

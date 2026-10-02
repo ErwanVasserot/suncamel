@@ -1,4 +1,4 @@
-<header class="contents" id="header" data-controller="menu rental-period-v2">
+<header class="contents" id="header" data-controller="menu rental-period-v2" data-rental-period-v2-closures-value="{{ rental_closures()|json_encode|e('html_attr') }}">
     <section class="bg-blue-800 text-white text-base py-2">
         <div class="grid w-full grid-cols-1 items-center gap-1 px-4 text-center md:grid-cols-[1fr_auto_1fr] md:gap-4">
             <span class="justify-self-center md:justify-self-start md:text-left">Call us | <a class="font-semibold text-amber-300" href="{{ site.phone_link }}">{{ site.phone }}</a></span>
@@ -52,6 +52,16 @@
                 <li><a href="/admin">Administration</a></li>
             {% endif %}
             {% if app.user %}
+                <li class="account-menu">
+                    <button class="account-menu-trigger" type="button" aria-haspopup="true">
+                        <span>My account</span>
+                        <i class="fa-solid fa-chevron-down text-sm" aria-hidden="true"></i>
+                    </button>
+                    <ul class="account-submenu">
+                        <li><a href="{{ path('account_password') }}">Change password</a></li>
+                        <li><a href="{{ path('account_orders') }}">My orders</a></li>
+                    </ul>
+                </li>
                 <li>
                     <span class="block text-base font-semibold text-slate-500">Logged in as</span>
                     <span class="block break-all text-xl">{{ app.user.userIdentifier }}</span>
@@ -120,6 +130,7 @@
                 </div>
 
                 <div class="rental-calendar" data-rental-period-v2-target="months"></div>
+                <p class="rental-closure-message" data-rental-period-v2-target="closureMessage" role="status" aria-hidden="true">Rental is closed</p>
 
                 <button class="rental-period-clear" type="button" data-action="rental-period-v2#clear">
                     <span aria-hidden="true">×</span>

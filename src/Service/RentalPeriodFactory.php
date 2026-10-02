@@ -2,9 +2,14 @@
 
 namespace App\Service;
 
+use App\Exception\RentalClosedException;
+use App\Repository\RentalClosureRepository;
+
 final class RentalPeriodFactory
 {
     private const DATE_PATTERN = '/^\d{4}-\d{2}-\d{2}$/';
+
+    public function __construct(private readonly ?RentalClosureRepository $closures = null) {}
 
     public function fromInput(
         string $pickupDate,
@@ -24,6 +29,10 @@ final class RentalPeriodFactory
 
         if ($pickupDay < new \DateTimeImmutable('today', $timezone) || $returnDay < $pickupDay) {
             throw new \InvalidArgumentException('The selected rental period is invalid.');
+        }
+
+        if (($closure = $this->closures?->findOverlapping($pickupDay, $returnDay)) !== null) {
+            throw new RentalClosedException($closure->getMessage());
         }
 
         $dayCount = (int) $pickupDay->diff($returnDay)->days + 1;

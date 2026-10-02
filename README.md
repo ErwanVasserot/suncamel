@@ -15,7 +15,8 @@ Site de location de vélos électriques à Raglan, développé avec Symfony. Il 
 - Confirmation fiable des paiements par webhook Stripe.
 - Créneaux demi-journée (08:00–12:00 ou 12:00–16:00), journée et séjours de plusieurs jours.
 - Tarifs demi-journée, journée et paliers dégressifs administrables par produit.
-- Inscription, connexion et rôles utilisateur/administrateur.
+- Inscription, connexion, changement et réinitialisation du mot de passe.
+- Rôles utilisateur/administrateur.
 - Gestion des produits, images, FAQ, utilisateurs et réservations avec EasyAdmin.
 - Contenu statique de secours lorsque certaines données ne sont pas disponibles en base.
 
@@ -69,7 +70,7 @@ php bin/console doctrine:migrations:migrate
 
 La connexion locale a été vérifiée avec succès sur la base `suncamel` :
 
-- les 6 migrations disponibles sont exécutées ;
+- toutes les migrations disponibles au moment de la vérification sont exécutées ;
 - aucune migration n’est en attente ;
 - le mapping des entités Doctrine est valide ;
 - le schéma SQL est synchronisé avec les entités ;
@@ -108,6 +109,46 @@ symfony server:start
 ```
 
 L’application est généralement accessible à l’adresse `https://localhost:8000`.
+
+## Comptes et mots de passe
+
+Un utilisateur connecté peut modifier son mot de passe depuis le menu du site ou directement sur :
+
+```text
+/account/password
+```
+
+Le formulaire exige le mot de passe actuel, puis le nouveau mot de passe et sa confirmation. Le nouveau mot de passe doit contenir au moins huit caractères.
+
+Un utilisateur qui ne peut plus se connecter peut demander une réinitialisation depuis le lien **Forgot your password?** de la page de connexion :
+
+```text
+/forgot-password
+```
+
+Pour éviter de révéler si une adresse est inscrite, la réponse affichée est identique pour toutes les adresses. Lorsqu’un compte existe, l’application génère un jeton aléatoire valable une heure et envoie un lien de réinitialisation. Seul le hash du jeton est conservé en base. Le jeton est invalidé dès que le mot de passe est modifié.
+
+### Configuration des e-mails
+
+Symfony Mailer utilise la variable `MAILER_DSN`. La valeur de développement suivante accepte les messages sans les distribuer :
+
+```dotenv
+MAILER_DSN=null://null
+```
+
+Pour que les liens de réinitialisation soient réellement envoyés en préproduction ou en production, remplacer cette valeur par le DSN SMTP du fournisseur utilisé, par exemple :
+
+```dotenv
+MAILER_DSN=smtp://utilisateur:mot-de-passe@smtp.example.com:587
+```
+
+Les caractères spéciaux de l’identifiant et du mot de passe doivent être encodés dans une URL. Après une modification de `.env.preprod`, recréer le conteneur applicatif afin de charger la nouvelle valeur :
+
+```bash
+sudo docker compose --env-file .env.preprod -f compose.preprod.yaml up -d --force-recreate app
+```
+
+L’expéditeur utilisé par les messages de réinitialisation est `no-reply@suncamel.co.nz`. Le serveur SMTP doit autoriser cette adresse et le domaine doit disposer des enregistrements SPF/DKIM adaptés.
 
 ## Configuration Stripe
 
@@ -198,10 +239,18 @@ Elle nécessite le rôle `ROLE_ADMIN` et permet de gérer :
 - les prix demi-journée, journée et les paliers dégressifs ;
 - les images des produits ;
 - les questions et réponses de la FAQ ;
+- les Terms & Conditions avec un éditeur HTML dédié ;
 - les utilisateurs et leurs rôles ;
 - les réservations et leur statut.
+- les périodes pendant lesquelles la location est fermée et le message affiché aux clients.
 
 Les migrations initiales créent des comptes de démonstration. Ils ne doivent pas être conservés tels quels en production : changez leurs mots de passe ou supprimez-les avant le déploiement.
+
+### Fermetures des locations
+
+Le menu **Administration > Fermetures des locations** permet de créer une période inclusive avec une date de début, une date de fin et un message. Lorsque le message est vide, `Rental is closed` est utilisé.
+
+Les jours concernés sont barrés et non sélectionnables dans le calendrier public. Le message est affiché au survol ou au focus. Une plage commençant avant la fermeture et se terminant après celle-ci est également refusée. Le serveur applique la même règle lors de l’ajout au panier et du paiement afin d’empêcher le contournement du calendrier.
 
 ## Structure du projet
 
@@ -223,6 +272,7 @@ templates/
   checkout/              Retours de paiement
   page/                  Composition des pages
   partials/              En-tête, pied de page et fil d’Ariane
+  security/              Connexion, inscription et gestion des mots de passe
 tests/                    Infrastructure PHPUnit
 ```
 
@@ -232,7 +282,7 @@ tests/                    Infrastructure PHPUnit
 - `ProductImage` : galerie associée à un produit.
 - `Booking` : réservation, client, statut, montant et session Stripe.
 - `BookingItem` : vélo, période, quantité et prix figé au moment de la commande.
-- `User` : compte client ou administrateur.
+- `User` : compte client ou administrateur et données temporaires de réinitialisation du mot de passe.
 - `FaqItem` : contenu administrable de la FAQ.
 - `Page` : page composée de métadonnées et de blocs JSON.
 - `Menu` et `MenuItem` : structure prévue pour des menus administrables.
@@ -253,6 +303,10 @@ tests/                    Infrastructure PHPUnit
 | `POST` | `/stripe/webhook` | Confirmation serveur Stripe |
 | `GET` | `/login` | Connexion |
 | `GET/POST` | `/register` | Création d’un compte |
+| `GET/POST` | `/account/password` | Changement du mot de passe d’un utilisateur connecté |
+| `GET` | `/account/orders` | Commandes à venir et historique de l’utilisateur connecté |
+| `GET/POST` | `/forgot-password` | Demande d’un lien de réinitialisation |
+| `GET/POST` | `/reset-password/{token}` | Choix d’un nouveau mot de passe avec un jeton temporaire |
 | `GET` | `/admin` | Administration |
 
 ## Contenu et pages de secours
@@ -317,7 +371,7 @@ php bin/console cache:clear
 
 ## État des tests
 
-PHPUnit est configuré, mais le projet ne contient pas encore de tests applicatifs. Les priorités recommandées sont :
+PHPUnit couvre actuellement les principales règles des entités et services de réservation. Les priorités complémentaires recommandées sont :
 
 1. validation des périodes de location ;
 2. détection des chevauchements de réservations ;
@@ -325,12 +379,14 @@ PHPUnit est configuré, mais le projet ne contient pas encore de tests applicati
 4. ajout et suppression d’articles du panier ;
 5. signature et idempotence du webhook Stripe ;
 6. permissions de l’administration.
+7. changement et réinitialisation du mot de passe.
 
 ## Préparation à la production
 
 Avant un déploiement public :
 
 - définir un `APP_SECRET` robuste ;
+- configurer un `MAILER_DSN` réel et vérifier la délivrabilité des e-mails de réinitialisation ;
 - utiliser exclusivement des secrets Stripe de production fournis par l’environnement ;
 - enregistrer le webhook HTTPS dans Stripe ;
 - supprimer ou sécuriser les comptes de démonstration ;
@@ -370,6 +426,7 @@ Les variables indispensables sont :
 - `APP_SECRET`
 - `DEFAULT_URI`
 - `DATABASE_URL`
+- `MAILER_DSN`
 - `STRIPE_SECRET_KEY`
 - `STRIPE_CURRENCY`
 - `STRIPE_WEBHOOK_SECRET`

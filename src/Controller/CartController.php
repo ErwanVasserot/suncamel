@@ -2,8 +2,10 @@
 
 namespace App\Controller;
 
+use App\Exception\RentalClosedException;
 use App\Repository\BookingRepository;
 use App\Repository\ProductRepository;
+use App\Repository\RentalClosureRepository;
 use App\Service\CartService;
 use App\Service\RentalPeriodFactory;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -15,10 +17,10 @@ use Symfony\Component\Routing\Attribute\Route;
 class CartController extends AbstractController
 {
     #[Route('/cart', name: 'cart_show', methods: ['GET'], priority: 30)]
-    public function show(CartService $cart, BookingRepository $bookings): Response
+    public function show(CartService $cart, BookingRepository $bookings, RentalClosureRepository $closures): Response
     {
         $items = $cart->items();
-        $availableQuantities = $this->availableQuantities($items, $bookings);
+        $availableQuantities = $this->availableQuantities($items, $bookings, $closures);
         $availability = [];
         foreach ($items as $item) {
             $availability[$item['key']] = $availableQuantities[$item['key']] >= $item['quantity'];
@@ -52,6 +54,9 @@ class CartController extends AbstractController
                 (int) $request->request->get('pickup_time', 8),
                 (int) $request->request->get('return_time', 16),
             );
+        } catch (RentalClosedException $exception) {
+            $this->addFlash('error', $exception->getMessage());
+            return $this->redirect('/products/' . $slug);
         } catch (\Exception) {
             $this->addFlash('error', 'Please select a rental period before adding a bike to the cart.');
             return $this->redirect('/products/' . $slug);
@@ -80,7 +85,7 @@ class CartController extends AbstractController
     }
 
     #[Route('/cart/update/{key}', name: 'cart_update', methods: ['POST'], priority: 30)]
-    public function update(string $key, Request $request, CartService $cart, BookingRepository $bookings): RedirectResponse
+    public function update(string $key, Request $request, CartService $cart, BookingRepository $bookings, RentalClosureRepository $closures): RedirectResponse
     {
         if (!$this->isCsrfTokenValid('cart_update_' . $key, (string) $request->request->get('_csrf_token'))) {
             throw $this->createAccessDeniedException('Invalid cart token.');
@@ -100,6 +105,10 @@ class CartController extends AbstractController
         }
 
         $requestedQuantity = max(1, (int) $request->request->get('quantity', 1));
+        if (($closure = $closures->findOverlapping($item['pickup'], $item['return'])) !== null) {
+            $this->addFlash('error', $closure->getMessage());
+            return $this->redirectToRoute('cart_show');
+        }
         $availableQuantity = max(0, $item['product']->getStockQuantity()
             - $bookings->reservedQuantity($item['product'], $item['pickup'], $item['return']));
 
@@ -120,10 +129,14 @@ class CartController extends AbstractController
     }
 
     /** @param list<array<string, mixed>> $items */
-    private function availableQuantities(array $items, BookingRepository $bookings): array
+    private function availableQuantities(array $items, BookingRepository $bookings, RentalClosureRepository $closures): array
     {
         $result = [];
         foreach ($items as $item) {
+            if ($closures->findOverlapping($item['pickup'], $item['return']) !== null) {
+                $result[$item['key']] = 0;
+                continue;
+            }
             $result[$item['key']] = max(0, $item['product']->getStockQuantity()
                 - $bookings->reservedQuantity($item['product'], $item['pickup'], $item['return']));
         }

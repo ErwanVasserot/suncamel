@@ -4,6 +4,7 @@ namespace App\Repository;
 
 use App\Entity\Booking;
 use App\Entity\Product;
+use App\Entity\User;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -66,5 +67,20 @@ class BookingRepository extends ServiceEntityRepository
             ->setParameter('end', $end)
             ->getQuery()
             ->getSingleScalarResult();
+    }
+
+    /** @return list<Booking> */
+    public function findForUser(User $user): array
+    {
+        return $this->createQueryBuilder('b')
+            ->addSelect('i', 'p')
+            ->leftJoin('b.items', 'i')
+            ->leftJoin('i.product', 'p')
+            ->andWhere('b.user = :user')
+            ->setParameter('user', $user)
+            ->orderBy('b.createdAt', 'DESC')
+            ->addOrderBy('i.pickupAt', 'DESC')
+            ->getQuery()
+            ->getResult();
     }
 }

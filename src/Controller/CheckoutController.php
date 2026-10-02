@@ -6,6 +6,7 @@ use App\Entity\Booking;
 use App\Entity\BookingItem;
 use App\Entity\User;
 use App\Repository\BookingRepository;
+use App\Repository\RentalClosureRepository;
 use App\Service\CartService;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\DBAL\LockMode;
@@ -34,7 +35,7 @@ class CheckoutController extends AbstractController
     }
 
     #[Route('/checkout', name: 'checkout_create', methods: ['POST'], priority: 30)]
-    public function create(Request $request, CartService $cart, BookingRepository $bookings, EntityManagerInterface $entityManager): Response
+    public function create(Request $request, CartService $cart, BookingRepository $bookings, RentalClosureRepository $closures, EntityManagerInterface $entityManager): Response
     {
         $this->denyAccessUnlessGranted('ROLE_USER');
         if (!$this->isCsrfTokenValid('checkout', (string) $request->request->get('_csrf_token'))) {
@@ -54,6 +55,10 @@ class CheckoutController extends AbstractController
         }
 
         foreach ($cartItems as $item) {
+            if (($closure = $closures->findOverlapping($item['pickup'], $item['return'])) !== null) {
+                $this->addFlash('error', $closure->getMessage());
+                return $this->redirectToRoute('cart_show');
+            }
             $available = $item['product']->getStockQuantity()
                 - $bookings->reservedQuantity($item['product'], $item['pickup'], $item['return']);
             if ($available < $item['quantity']) {
