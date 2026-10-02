@@ -163,8 +163,9 @@ class CheckoutController extends AbstractController
     public function webhook(Request $request, BookingRepository $bookings, EntityManagerInterface $entityManager): JsonResponse
     {
         $payload = $request->getContent();
-        if (!$this->validStripeSignature($payload, (string) $request->headers->get('Stripe-Signature'))) {
-            return new JsonResponse(['error' => 'Invalid signature'], Response::HTTP_BAD_REQUEST);
+        $signatureError = $this->stripeSignatureError($payload, (string) $request->headers->get('Stripe-Signature'));
+        if ($signatureError !== null) {
+            return new JsonResponse(['error' => $signatureError], Response::HTTP_BAD_REQUEST);
         }
         $event = json_decode($payload, true);
         if (!is_array($event)) {
@@ -233,20 +234,35 @@ class CheckoutController extends AbstractController
         return $data;
     }
 
-    private function validStripeSignature(string $payload, string $header): bool
+    private function stripeSignatureError(string $payload, string $header): ?string
     {
-        if ($this->stripeWebhookSecret === '' || $header === '') { return false; }
+        if ($this->stripeWebhookSecret === '') {
+            return 'Webhook secret is not configured.';
+        }
+        if ($header === '') {
+            return 'Stripe-Signature header is missing.';
+        }
+
         $parts = [];
         foreach (explode(',', $header) as $part) {
             [$key, $value] = array_pad(explode('=', trim($part), 2), 2, null);
             if ($key !== null && $value !== null) { $parts[$key][] = $value; }
         }
         $timestamp = $parts['t'][0] ?? null;
-        if (!is_string($timestamp) || abs(time() - (int) $timestamp) > 300) { return false; }
+        if (!is_string($timestamp) || !ctype_digit($timestamp)) {
+            return 'Stripe-Signature header is malformed.';
+        }
+
+        $signatureAge = abs(time() - (int) $timestamp);
+        if ($signatureAge > 300) {
+            return sprintf('Signature timestamp is outside the 300-second tolerance (age: %d seconds).', $signatureAge);
+        }
+
         $expected = hash_hmac('sha256', $timestamp . '.' . $payload, $this->stripeWebhookSecret);
         foreach ($parts['v1'] ?? [] as $signature) {
-            if (hash_equals($expected, $signature)) { return true; }
+            if (hash_equals($expected, $signature)) { return null; }
         }
-        return false;
+
+        return 'Signature does not match the configured webhook secret.';
     }
 }
