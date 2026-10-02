@@ -18,11 +18,17 @@ class CartController extends AbstractController
     public function show(CartService $cart, BookingRepository $bookings): Response
     {
         $items = $cart->items();
+        $availableQuantities = $this->availableQuantities($items, $bookings);
+        $availability = [];
+        foreach ($items as $item) {
+            $availability[$item['key']] = $availableQuantities[$item['key']] >= $item['quantity'];
+        }
 
         return $this->render('cart/show.html.twig', [
             'items' => $items,
             'total_amount' => $cart->totalAmount(),
-            'availability' => $this->availability($items, $bookings),
+            'availability' => $availability,
+            'available_quantities' => $availableQuantities,
         ]);
     }
 
@@ -73,15 +79,55 @@ class CartController extends AbstractController
         return $this->redirectToRoute('cart_show');
     }
 
+    #[Route('/cart/update/{key}', name: 'cart_update', methods: ['POST'], priority: 30)]
+    public function update(string $key, Request $request, CartService $cart, BookingRepository $bookings): RedirectResponse
+    {
+        if (!$this->isCsrfTokenValid('cart_update_' . $key, (string) $request->request->get('_csrf_token'))) {
+            throw $this->createAccessDeniedException('Invalid cart token.');
+        }
+
+        $item = null;
+        foreach ($cart->items() as $cartItem) {
+            if ($cartItem['key'] === $key) {
+                $item = $cartItem;
+                break;
+            }
+        }
+
+        if ($item === null) {
+            $this->addFlash('error', 'This cart item no longer exists.');
+            return $this->redirectToRoute('cart_show');
+        }
+
+        $requestedQuantity = max(1, (int) $request->request->get('quantity', 1));
+        $availableQuantity = max(0, $item['product']->getStockQuantity()
+            - $bookings->reservedQuantity($item['product'], $item['pickup'], $item['return']));
+
+        if ($requestedQuantity > $availableQuantity) {
+            $this->addFlash('error', sprintf(
+                'Only %d unit%s of %s %s available for this period.',
+                $availableQuantity,
+                $availableQuantity === 1 ? '' : 's',
+                $item['product']->getTitle(),
+                $availableQuantity === 1 ? 'is' : 'are',
+            ));
+            return $this->redirectToRoute('cart_show');
+        }
+
+        $cart->updateQuantity($key, $requestedQuantity);
+
+        return $this->redirectToRoute('cart_show');
+    }
+
     /** @param list<array<string, mixed>> $items */
-    private function availability(array $items, BookingRepository $bookings): array
+    private function availableQuantities(array $items, BookingRepository $bookings): array
     {
         $result = [];
         foreach ($items as $item) {
-            $available = $item['product']->getStockQuantity()
-                - $bookings->reservedQuantity($item['product'], $item['pickup'], $item['return']);
-            $result[$item['key']] = $available >= $item['quantity'];
+            $result[$item['key']] = max(0, $item['product']->getStockQuantity()
+                - $bookings->reservedQuantity($item['product'], $item['pickup'], $item['return']));
         }
+
         return $result;
     }
 }

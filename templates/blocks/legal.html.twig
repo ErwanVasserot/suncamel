@@ -1,0 +1,42 @@
+{% set data = block.data ?? {} %}
+<section class="py-12">
+    <div class="container">
+        <div class="mx-auto max-w-[820px] rounded-3xl bg-white p-6 shadow-[0_18px_50px_rgba(10,18,38,0.12)] ring-1 ring-slate-200 md:p-10">
+            {% if data.title is defined %}
+                <h2 class="text-center text-4xl font-semibold tracking-tight">{{ data.title }}</h2>
+            {% endif %}
+            {% if data.html is defined %}
+                <div class="legal-content">{{ data.html|raw }}</div>
+            {% endif %}
+        </div>
+    </div>
+</section>
+
+<style>
+    .legal-content {
+        margin-top: 2rem;
+        color: #475569;
+        font-size: 1.05rem;
+        line-height: 1.75;
+        text-align: left;
+    }
+    .legal-content h3 {
+        margin: 2.25rem 0 0.75rem;
+        color: #0f172a;
+        font-size: 1.3rem;
+        font-weight: 600;
+        line-height: 1.35;
+    }
+    .legal-content p { margin-top: 0.75rem; }
+    .legal-content ul {
+        margin-top: 0.75rem;
+        padding-left: 1.5rem;
+        list-style: disc;
+    }
+    .legal-content li + li { margin-top: 0.45rem; }
+    .legal-content a {
+        color: #1d4ed8;
+        font-weight: 600;
+        text-decoration: underline;
+    }
+</style>

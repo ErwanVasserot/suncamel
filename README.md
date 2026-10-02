@@ -111,13 +111,20 @@ L’application est généralement accessible à l’adresse `https://localhost:
 
 ## Configuration Stripe
 
-Ajouter les variables suivantes dans `.env.local` :
+Le développement local et la préproduction utilisent des configurations séparées :
+
+- `.env.local`, privé et exclu de Git/Docker, contient uniquement les identifiants du sandbox Stripe local ;
+- `.env.preprod`, privé sur le serveur, reste injecté par `compose.preprod.yaml` et n'est jamais remplacé par la configuration locale.
+
+Compléter les variables déjà présentes dans `.env.local` avec les valeurs du mode test Stripe :
 
 ```dotenv
 STRIPE_SECRET_KEY=sk_test_...
 STRIPE_CURRENCY=nzd
 STRIPE_WEBHOOK_SECRET=whsec_...
 ```
+
+L'application refuse volontairement une clé `sk_live_` lorsque `APP_ENV=dev`.
 
 Le webhook Stripe doit cibler :
 
@@ -139,6 +146,11 @@ stripe listen --forward-to https://localhost:8000/stripe/webhook --skip-verify
 ```
 
 Copier le secret `whsec_...` affiché par Stripe CLI dans `STRIPE_WEBHOOK_SECRET`.
+Redémarrer ensuite le serveur Symfony ou vider son cache si les anciennes variables restent chargées :
+
+```bash
+php bin/console cache:clear
+```
 
 ### Cycle d’une réservation
 

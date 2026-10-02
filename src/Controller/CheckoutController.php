@@ -22,6 +22,8 @@ class CheckoutController extends AbstractController
 {
     public function __construct(
         private readonly HttpClientInterface $httpClient,
+        #[Autowire('%kernel.environment%')]
+        private readonly string $environment,
         #[Autowire('%env(string:STRIPE_SECRET_KEY)%')]
         private readonly string $stripeSecretKey,
         #[Autowire('%env(string:STRIPE_CURRENCY)%')]
@@ -39,7 +41,10 @@ class CheckoutController extends AbstractController
             throw $this->createAccessDeniedException('Invalid checkout token.');
         }
         if ($this->stripeSecretKey === '') {
-            throw new \RuntimeException('STRIPE_SECRET_KEY is not configured.');
+            throw new \RuntimeException('STRIPE_SECRET_KEY is not configured. Add a Stripe test key to .env.local.');
+        }
+        if ($this->environment === 'dev' && !str_starts_with($this->stripeSecretKey, 'sk_test_')) {
+            throw new \RuntimeException('Local Stripe checkout only accepts an sk_test_ key.');
         }
 
         $cartItems = $cart->items();

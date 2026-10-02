@@ -33,7 +33,7 @@ class Booking
     private int $totalAmount = 0;
 
     #[ORM\Column(length: 3)]
-    private string $currency = 'nzd';
+    private string $currency = 'NZD';
 
     #[ORM\Column(length: 255, nullable: true, unique: true)]
     private ?string $stripeSessionId = null;
@@ -67,8 +67,8 @@ class Booking
     public function setStatus(string $status): self { $this->status = $status; return $this; }
     public function getTotalAmount(): int { return $this->totalAmount; }
     public function setTotalAmount(int $totalAmount): self { $this->totalAmount = $totalAmount; return $this; }
-    public function getCurrency(): string { return $this->currency; }
-    public function setCurrency(string $currency): self { $this->currency = strtolower($currency); return $this; }
+    public function getCurrency(): string { return strtoupper($this->currency); }
+    public function setCurrency(string $currency): self { $this->currency = strtoupper($currency); return $this; }
     public function getStripeSessionId(): ?string { return $this->stripeSessionId; }
     public function setStripeSessionId(?string $stripeSessionId): self { $this->stripeSessionId = $stripeSessionId; return $this; }
     public function getCreatedAt(): \DateTimeImmutable { return $this->createdAt; }

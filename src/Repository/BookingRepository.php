@@ -33,4 +33,38 @@ class BookingRepository extends ServiceEntityRepository
             ->getQuery()
             ->getSingleScalarResult();
     }
+
+    /** @return list<Booking> */
+    public function findActiveOverlapping(\DateTimeImmutable $start, \DateTimeImmutable $end): array
+    {
+        return $this->createQueryBuilder('b')
+            ->select('DISTINCT b, i, p')
+            ->join('b.items', 'i')
+            ->join('i.product', 'p')
+            ->andWhere('i.pickupAt < :end')
+            ->andWhere('i.returnAt > :start')
+            ->andWhere('(b.status = :paid OR (b.status = :pending AND b.expiresAt > :now))')
+            ->setParameter('start', $start)
+            ->setParameter('end', $end)
+            ->setParameter('paid', Booking::STATUS_PAID)
+            ->setParameter('pending', Booking::STATUS_PENDING)
+            ->setParameter('now', new \DateTimeImmutable())
+            ->orderBy('i.pickupAt', 'ASC')
+            ->getQuery()
+            ->getResult();
+    }
+
+    public function paidAmountBetween(\DateTimeImmutable $start, \DateTimeImmutable $end): int
+    {
+        return (int) $this->createQueryBuilder('b')
+            ->select('COALESCE(SUM(b.totalAmount), 0)')
+            ->andWhere('b.status = :paid')
+            ->andWhere('b.paidAt >= :start')
+            ->andWhere('b.paidAt < :end')
+            ->setParameter('paid', Booking::STATUS_PAID)
+            ->setParameter('start', $start)
+            ->setParameter('end', $end)
+            ->getQuery()
+            ->getSingleScalarResult();
+    }
 }

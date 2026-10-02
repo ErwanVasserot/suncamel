@@ -38,6 +38,19 @@ class CartService
         $this->session()->set(self::SESSION_KEY, $items);
     }
 
+    public function updateQuantity(string $key, int $quantity): bool
+    {
+        $items = $this->rawItems();
+        if (!isset($items[$key])) {
+            return false;
+        }
+
+        $items[$key]['quantity'] = max(1, $quantity);
+        $this->session()->set(self::SESSION_KEY, $items);
+
+        return true;
+    }
+
     /**
      * @return list<array{key: string, product: Product, pickup: \DateTimeImmutable, return: \DateTimeImmutable, quantity: int, days: int, slot: string, period_label: string, unit_amount: int, total_amount: int}>
      */

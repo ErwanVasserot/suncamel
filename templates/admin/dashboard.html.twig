@@ -1,0 +1,160 @@
+{% extends '@EasyAdmin/page/content.html.twig' %}
+
+{% block content_title %}Dashboard SunCamel{% endblock %}
+
+{% block main %}
+    <div class="sc-dashboard">
+        <section class="sc-card sc-window-card">
+            <div class="sc-window-heading">
+                <div>
+                    <strong>Fenêtre affichée</strong>
+                    <span id="sc-window-label">{{ window_start|date('d/m/Y') }} – {{ window_end|date('d/m/Y') }}</span>
+                </div>
+                <div class="sc-window-actions">
+                    <a href="{{ path('admin', {window: previous_window_offset}) }}" aria-label="Afficher les 30 jours précédents">← 30 jours</a>
+                    <a href="{{ path('admin', {window: 0}) }}">Aujourd’hui</a>
+                    <a href="{{ path('admin', {window: next_window_offset}) }}" aria-label="Afficher les 30 jours suivants">30 jours →</a>
+                </div>
+            </div>
+            <form id="sc-window-form" method="get" action="{{ path('admin') }}">
+                <div class="sc-slider-labels"><span>− 1 an</span><span>Aujourd’hui</span><span>+ 1 an</span></div>
+                <input id="sc-window-slider" type="range" name="window" min="-365" max="365" step="1" value="{{ window_offset }}" aria-label="Décaler la fenêtre des graphiques dans le passé ou le futur">
+            </form>
+        </section>
+
+        <div class="sc-kpis">
+            <article class="sc-card sc-kpi">
+                <span>Taux de réservation</span>
+                <strong>{{ booking_rate|number_format(1, ',', ' ') }}%</strong>
+                <small>Occupation globale sur la fenêtre affichée</small>
+            </article>
+            <article class="sc-card sc-kpi">
+                <span>Montant reçu cette année</span>
+                <strong>{{ currency }} {{ (received_this_year / 100)|number_format(2, ',', ' ') }}</strong>
+                <small>Réservations payées depuis le 1er janvier</small>
+            </article>
+            <article class="sc-card sc-kpi">
+                <span>Commandes à venir</span>
+                <strong>{{ currency }} {{ (future_order_amount / 100)|number_format(2, ',', ' ') }}</strong>
+                <small>Valeur des réservations actives avant le 31 décembre</small>
+            </article>
+            <article class="sc-card sc-kpi">
+                <span>Capacité quotidienne</span>
+                <strong>{{ total_daily_stock }}</strong>
+                <small>Vélos actifs disponibles à la location</small>
+            </article>
+        </div>
+
+        <div class="sc-chart-grid">
+            <section class="sc-card sc-chart-card sc-chart-card-wide">
+                <div class="sc-card-heading">
+                    <div><h2>{{ reservation_chart_title }} et disponibilités</h2><p>Répartition quotidienne de la capacité</p></div>
+                    <div class="sc-legends">
+                        <span class="sc-legend sc-blue">Réservées</span>
+                        <span class="sc-legend sc-green">Disponibles</span>
+                    </div>
+                </div>
+                <div class="sc-chart-body">
+                    <div class="sc-y-axis"><span>{{ total_daily_stock }}</span><span>{{ (total_daily_stock / 2)|round }}</span><span>0</span></div>
+                    <div class="sc-bars" aria-label="Réservations et disponibilités sur la fenêtre sélectionnée">
+                    {% for day in daily %}
+                        <div class="sc-bar-column" data-tooltip="{{ day.tooltip }}" aria-label="{{ day.tooltip }}" tabindex="0">
+                            <div class="sc-bar-track sc-bar-stack">
+                                <div class="sc-bar-segment sc-bar-green" style="height: {{ day.remaining_percent }}%"></div>
+                                <div class="sc-bar-segment sc-bar-blue" style="height: {{ day.reserved_percent }}%"></div>
+                            </div>
+                            <small>{{ loop.index0 % 7 == 0 or loop.last ? day.label : '' }}</small>
+                        </div>
+                    {% endfor %}
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <section class="sc-card sc-table-card">
+            <div class="sc-card-heading"><div><h2>Prochaines réservations</h2><p>Les 10 prochaines locations actives</p></div></div>
+            <div class="table-responsive">
+                <table class="table">
+                    <thead><tr><th>Référence</th><th>Départ</th><th>Retour</th><th>Quantité</th><th>Statut</th><th>Montant</th></tr></thead>
+                    <tbody>
+                    {% for row in upcoming %}
+                        <tr>
+                            <td><strong>{{ row.booking.reference }}</strong></td>
+                            <td>{{ row.pickup|date('d/m/Y H:i', 'Pacific/Auckland') }}</td>
+                            <td>{{ row.return|date('d/m/Y H:i', 'Pacific/Auckland') }}</td>
+                            <td>{{ row.quantity }}</td>
+                            <td><span class="badge {{ row.booking.status == 'paid' ? 'badge-success' : 'badge-warning' }}">{{ row.booking.status }}</span></td>
+                            <td>{{ row.booking.currency }} {{ (row.booking.totalAmount / 100)|number_format(2, ',', ' ') }}</td>
+                        </tr>
+                    {% else %}
+                        <tr><td colspan="6" class="text-center">Aucune réservation à venir.</td></tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </div>
+
+    <style>
+        .sc-dashboard { display: grid; gap: 1.25rem; }
+        .sc-card { border: 1px solid var(--border-color); border-radius: 14px; background: var(--content-panel-bg); box-shadow: 0 8px 28px rgba(15, 23, 42, .06); }
+        .sc-window-card { display: grid; gap: 1rem; padding: 1.25rem; }
+        .sc-window-heading { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+        .sc-window-heading > div:first-child { display: grid; gap: .2rem; }
+        .sc-window-heading span { color: var(--text-muted); }
+        .sc-window-actions { display: flex; flex-wrap: wrap; gap: .5rem; }
+        .sc-window-actions a { border: 1px solid var(--border-color); border-radius: 8px; padding: .45rem .75rem; background: var(--body-bg); font-size: .82rem; font-weight: 600; text-decoration: none; }
+        .sc-slider-labels { display: flex; justify-content: space-between; color: var(--text-muted); font-size: .72rem; }
+        #sc-window-slider { width: 100%; cursor: ew-resize; accent-color: #2563eb; }
+        .sc-kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1rem; }
+        .sc-kpi { display: grid; gap: .35rem; padding: 1.25rem; }
+        .sc-kpi span, .sc-kpi small, .sc-card-heading p { color: var(--text-muted); }
+        .sc-kpi strong { color: var(--text-color); font-size: 1.75rem; line-height: 1.2; }
+        .sc-chart-grid { display: grid; grid-template-columns: 1fr; gap: 1rem; }
+        .sc-chart-card, .sc-table-card { padding: 1.25rem; }
+        .sc-card-heading { display: flex; align-items: start; justify-content: space-between; gap: 1rem; margin-bottom: 1.25rem; }
+        .sc-card-heading h2 { margin: 0; font-size: 1.15rem; }
+        .sc-card-heading p { margin: .2rem 0 0; font-size: .85rem; }
+        .sc-legend { display: flex; align-items: center; gap: .4rem; font-size: .8rem; white-space: nowrap; }
+        .sc-legends { display: flex; flex-wrap: wrap; gap: 1rem; }
+        .sc-legend::before { width: .7rem; height: .7rem; border-radius: 3px; content: ''; }
+        .sc-blue::before, .sc-bar-blue { background: #2563eb; }
+        .sc-green::before, .sc-bar-green { background: #16a34a; }
+        .sc-chart-body { display: grid; grid-template-columns: 28px minmax(0, 1fr); gap: .5rem; }
+        .sc-y-axis { display: flex; height: 210px; flex-direction: column; justify-content: space-between; align-items: end; color: var(--text-muted); font-size: .65rem; }
+        .sc-bars { display: grid; grid-template-columns: repeat(30, minmax(7px, 1fr)); gap: 4px; height: 240px; align-items: end; border-bottom: 1px solid var(--border-color); background: linear-gradient(to bottom, transparent 49.7%, rgba(148,163,184,.22) 50%, transparent 50.3%); }
+        .sc-bar-column { position: relative; display: grid; grid-template-rows: 210px 24px; gap: 5px; min-width: 0; outline: none; }
+        .sc-bar-track { display: flex; align-items: end; height: 210px; overflow: hidden; border-radius: 4px 4px 0 0; background: rgba(148, 163, 184, .14); }
+        .sc-bar-stack { display: flex; flex-direction: column; justify-content: end; }
+        .sc-bar-segment { width: 100%; min-height: 0; transition: opacity .2s; }
+        .sc-bar-segment:first-child { border-radius: 4px 4px 0 0; }
+        .sc-bar-column:hover .sc-bar-segment { opacity: .72; }
+        .sc-bar-column::after { position: absolute; z-index: 20; bottom: calc(100% - 205px); left: 50%; display: none; min-width: 190px; padding: .65rem .75rem; border-radius: 8px; background: #0f172a; color: #fff; content: attr(data-tooltip); font-size: .74rem; line-height: 1.5; pointer-events: none; transform: translateX(-50%); white-space: pre-line; box-shadow: 0 10px 25px rgba(15,23,42,.25); }
+        .sc-bar-column:hover::after, .sc-bar-column:focus::after { display: block; }
+        .sc-bar-column small { overflow: visible; color: var(--text-muted); font-size: .64rem; white-space: nowrap; }
+        .sc-table-card { overflow: hidden; }
+        @media (max-width: 1100px) { .sc-kpis { grid-template-columns: repeat(2, 1fr); } .sc-chart-grid { grid-template-columns: 1fr; } }
+        @media (max-width: 600px) { .sc-kpis { grid-template-columns: 1fr; } .sc-chart-card { overflow-x: auto; } .sc-bars { min-width: 650px; } }
+    </style>
+
+    <script>
+        (() => {
+            const slider = document.getElementById('sc-window-slider');
+            const form = document.getElementById('sc-window-form');
+            const label = document.getElementById('sc-window-label');
+            if (!slider || !form || !label) return;
+
+            const format = (date) => new Intl.DateTimeFormat('fr-FR').format(date);
+            const updateLabel = () => {
+                const start = new Date();
+                start.setHours(0, 0, 0, 0);
+                start.setDate(start.getDate() + Number(slider.value));
+                const end = new Date(start);
+                end.setDate(end.getDate() + 29);
+                label.textContent = `${format(start)} – ${format(end)}`;
+            };
+            slider.addEventListener('input', updateLabel);
+            slider.addEventListener('change', () => form.submit());
+        })();
+    </script>
+{% endblock %}
