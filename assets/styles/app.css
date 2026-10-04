@@ -19,10 +19,15 @@
   .rich-text a:hover { @apply text-blue-950 decoration-blue-950; }
   .rich-text a:focus-visible { @apply rounded-sm outline-2 outline-offset-2 outline-blue-800; }
 
-  .menu-backdrop { @apply fixed inset-0 bg-black/30 opacity-0 pointer-events-none transition; }
-  .menu-panel { @apply fixed top-0 right-0 h-full w-[min(42vw,520px)] bg-white shadow-2xl translate-x-full transition z-50 p-10 grid grid-rows-[auto_1fr_auto] gap-6; }
+  .menu-backdrop { @apply fixed inset-0 z-[45] bg-black/30 opacity-0 pointer-events-none transition; }
+  .menu-panel { @apply fixed top-0 right-0 z-50 grid h-dvh w-[min(90vw,420px)] grid-rows-[auto_minmax(0,1fr)_auto] gap-4 bg-white p-5 shadow-2xl transition translate-x-full; }
   .menu-open .menu-backdrop { @apply opacity-100 pointer-events-auto; }
   .menu-open .menu-panel { @apply translate-x-0; }
+  .menu-title { @apply text-2xl; }
+  .menu-close { @apply flex h-10 w-10 items-center justify-center text-3xl leading-none; }
+  .menu-links { @apply grid content-start gap-1 overflow-y-auto py-3 text-lg font-semibold leading-snug; }
+  .menu-links > li > a { @apply block py-2; }
+  .menu-social { @apply px-5 py-4; }
   .account-menu { @apply relative; }
   .account-menu-trigger { @apply flex w-full items-center gap-3 text-left; }
   .account-submenu { display: none; @apply ml-3 mt-2 gap-1 border-l-2 border-slate-200 pl-4 text-base font-normal text-slate-600; }
@@ -102,14 +107,39 @@
   gap: 1rem;
 }
 
-.header-logo { grid-area: logo; }
+.header-logo { grid-area: logo; max-width: 100%; }
+.header-logo img { width: min(42vw, 160px); height: auto; max-height: 60px; object-fit: contain; }
 .header-period { grid-area: period; }
 .header-actions { grid-area: actions; }
+.header-menu-button { font-size: 1rem; }
 
-@media (min-width: 768px) {
+@media (min-width: 640px) {
+  .header-logo img { width: 200px; max-height: 72px; }
+
+  .menu-panel {
+    width: min(72vw, 460px);
+    padding: 2rem;
+    gap: 1.5rem;
+  }
+
+  .menu-title { font-size: 1.875rem; }
+  .menu-links { font-size: 1.25rem; gap: 0.5rem; }
+}
+
+@media (min-width: 1100px) {
   .header-main {
     grid-template-columns: auto minmax(0, 1fr) auto;
     grid-template-areas: "logo period actions";
     gap: 1.5rem;
   }
+
+  .header-logo img { width: 240px; max-height: 84px; }
+  .header-menu-button { font-size: 1.125rem; }
+
+  .menu-panel {
+    width: min(42vw, 520px);
+    padding: 2.5rem;
+  }
+
+  .menu-links { font-size: 1.5rem; }
 }

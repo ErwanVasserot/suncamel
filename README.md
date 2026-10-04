@@ -589,16 +589,21 @@ echo "host: ".($parts["host"] ?? "absent").PHP_EOL;
 '
 ```
 
-### Les styles récemment modifiés ne sont pas visibles
+### Les styles ou templates récemment modifiés ne sont pas visibles
 
-Reconstruire Tailwind et vider le cache :
+Si `public/assets/` existe, Symfony sert cette compilation en priorité et ignore les changements apportés aux fichiers source. Après une modification de Tailwind, d’un template ou d’un contrôleur Stimulus, actualiser toute la compilation locale :
 
 ```bash
 php bin/console tailwind:build --minify
+php bin/console asset-map:compile
 php bin/console cache:clear
 ```
 
-Si `public/assets/` a été compilé en mode développement, les ressources compilées peuvent prendre le dessus sur les fichiers source. Utiliser le mode watch ou nettoyer les ressources compilées selon le workflow local retenu.
+Effectuer ensuite un rechargement forcé du navigateur (`Cmd + Shift + R` sur macOS, `Ctrl + Shift + R` sur Windows ou Linux). La commande `asset-map:compile` est destinée principalement à la production ; pour un développement continu, ne pas conserver une ancienne compilation dans `public/assets/` et utiliser Tailwind en mode watch :
+
+```bash
+php bin/console tailwind:build --watch
+```
 
 ### Le paiement est accepté mais la réservation reste `pending`
 

@@ -10,7 +10,7 @@
     <section class="sticky top-0 z-40 border-b border-slate-200 bg-white">
         <div class="container header-main py-4">
             <a href="/" class="header-logo flex items-center gap-3">
-                <img class="w-auto" style="height: 84px" src="{{ site.logo }}" alt="{{ site.name }}">
+                <img src="{{ site.logo }}" alt="{{ site.name }}">
             </a>
 
             <div class="header-period flex items-center justify-center">
@@ -21,7 +21,7 @@
             </div>
 
             <div class="header-actions flex items-center justify-end gap-3">
-                <button class="btn btn-primary text-lg px-4" type="button" data-action="menu#toggle" data-menu-target="button">
+                <button class="btn btn-primary header-menu-button px-4" type="button" data-action="menu#toggle" data-menu-target="button">
                     <span>Menu</span>
                     <span class="ml-2 inline-flex h-4 w-4 flex-col justify-center gap-1">
                         <span class="h-0.5 w-4 bg-white"></span>
@@ -41,10 +41,10 @@
     <div class="menu-backdrop" data-menu-target="backdrop" data-action="click->menu#close"></div>
     <nav class="menu-panel" data-menu-target="panel" aria-hidden="true">
         <div class="flex items-center justify-between">
-            <span class="text-3xl font-semibold">Menu</span>
-            <button class="text-3xl" type="button" data-action="menu#close">×</button>
+            <span class="menu-title font-semibold">Menu</span>
+            <button class="menu-close" type="button" data-action="menu#close" aria-label="Close menu">×</button>
         </div>
-        <ul class="mt-8 grid gap-2 text-2xl font-semibold">
+        <ul class="menu-links">
             {% for item in site.menu %}
                 <li><a href="{{ item.url }}">{{ item.label }}</a></li>
             {% endfor %}
@@ -72,7 +72,7 @@
                 <li><a href="/register">Create account</a></li>
             {% endif %}
         </ul>
-        <div class="rounded-3xl bg-slate-100 px-6 py-4">
+        <div class="menu-social rounded-3xl bg-slate-100">
             <div class="text-lg font-semibold text-slate-600">Follow us on</div>
             <div class="mt-3 flex items-center gap-3">
                 {% for social in site.socials %}
