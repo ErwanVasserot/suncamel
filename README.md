@@ -152,16 +152,17 @@ Supprimer les espaces affichés dans le mot de passe d'application avant de l'in
 
 Les messages utilisent actuellement `no-reply@suncamel.co.nz` comme expéditeur. Cette adresse doit être ajoutée et validée dans le compte Gmail via la fonction **Envoyer des e-mails en tant que**. Sans cela, Gmail peut remplacer l'expéditeur par `guilhem.camel@gmail.com` ou refuser l'envoi. Pour une utilisation plus soutenue en production, préférer un fournisseur d'e-mails transactionnels avec SPF et DKIM configurés pour `suncamel.co.nz`.
 
-Après une modification de `.env.preprod`, recréer le conteneur applicatif afin de charger la nouvelle valeur :
+Après une modification de `.env.preprod`, recréer l'application et le worker afin de charger la nouvelle valeur :
 
 ```bash
-sudo docker compose --env-file .env.preprod -f compose.preprod.yaml up -d --force-recreate app
+sudo docker compose --env-file .env.preprod -f compose.preprod.yaml up -d --force-recreate app worker
 ```
 
-Les e-mails sont placés dans la file Messenger `async`. Un worker doit donc être actif dans chaque environnement qui envoie réellement des messages :
+Les e-mails sont placés dans la file Messenger `async`. En préproduction, le service Docker `worker` la consomme en permanence et redémarre automatiquement. Son état et ses journaux se contrôlent avec :
 
 ```bash
-php bin/console messenger:consume async --time-limit=3600
+sudo docker compose --env-file .env.preprod -f compose.preprod.yaml ps worker
+sudo docker compose --env-file .env.preprod -f compose.preprod.yaml logs --tail=100 worker
 ```
 
 Après confirmation du paiement par le webhook Stripe, le client reçoit le récapitulatif de sa réservation (vélos, quantités, dates et heures, total et lien vers les Terms & Conditions). Une copie opérationnelle contenant aussi l’adresse du client est envoyée à `guilhem.camel@gmail.com`.

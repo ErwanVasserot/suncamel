@@ -27,6 +27,41 @@ services:
       - product_images:/var/www/html/public/images/suncamel/products
       - app_var:/var/www/html/var
 
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile.preprod
+    restart: unless-stopped
+    command:
+      - php
+      - bin/console
+      - messenger:consume
+      - async
+      - --env=prod
+      - --no-debug
+      - --time-limit=3600
+      - --memory-limit=128M
+    environment:
+      APP_ENV: prod
+      APP_DEBUG: 0
+      APP_SECRET: ${APP_SECRET:?APP_SECRET must be set}
+      DEFAULT_URI: ${DEFAULT_URI:?DEFAULT_URI must be set}
+      DATABASE_URL: mysql://suncamel:${MARIADB_PASSWORD:?MARIADB_PASSWORD must be set}@database:3306/suncamel?serverVersion=10.11.14-MariaDB&charset=utf8mb4
+      MESSENGER_TRANSPORT_DSN: doctrine://default?auto_setup=0
+      MAILER_DSN: ${MAILER_DSN:-null://null}
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-}
+      STRIPE_CURRENCY: ${STRIPE_CURRENCY:-nzd}
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-}
+      TRUSTED_PROXIES: REMOTE_ADDR
+    depends_on:
+      app:
+        condition: service_started
+      database:
+        condition: service_healthy
+    volumes:
+      - app_var:/var/www/html/var
+    stop_grace_period: 30s
+
   database:
     image: mariadb:10.11
     restart: unless-stopped
