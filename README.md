@@ -136,19 +136,35 @@ Symfony Mailer utilise la variable `MAILER_DSN`. La valeur de développement sui
 MAILER_DSN=null://null
 ```
 
-Pour que les liens de réinitialisation soient réellement envoyés en préproduction ou en production, remplacer cette valeur par le DSN SMTP du fournisseur utilisé, par exemple :
+Pour que les messages soient réellement envoyés en préproduction ou en production, remplacer cette valeur par le DSN SMTP du fournisseur utilisé.
+
+#### Utiliser Gmail SMTP
+
+Le compte Google doit avoir la validation en deux étapes activée. Créer ensuite un **mot de passe d'application** Google dédié à SunCamel ; le mot de passe habituel du compte Gmail ne doit pas être utilisé.
+
+Configurer `MAILER_DSN` dans le fichier d'environnement privé du serveur :
 
 ```dotenv
-MAILER_DSN=smtp://utilisateur:mot-de-passe@smtp.example.com:587
+MAILER_DSN=smtps://guilhem.camel%40gmail.com:MOT_DE_PASSE_APPLICATION@smtp.gmail.com:465
 ```
 
-Les caractères spéciaux de l’identifiant et du mot de passe doivent être encodés dans une URL. Après une modification de `.env.preprod`, recréer le conteneur applicatif afin de charger la nouvelle valeur :
+Supprimer les espaces affichés dans le mot de passe d'application avant de l'insérer dans le DSN. Les caractères spéciaux de l’identifiant et du mot de passe doivent être encodés comme dans une URL (`@` devient par exemple `%40`). Ne jamais committer le véritable DSN ou le mot de passe d'application.
+
+Les messages utilisent actuellement `no-reply@suncamel.co.nz` comme expéditeur. Cette adresse doit être ajoutée et validée dans le compte Gmail via la fonction **Envoyer des e-mails en tant que**. Sans cela, Gmail peut remplacer l'expéditeur par `guilhem.camel@gmail.com` ou refuser l'envoi. Pour une utilisation plus soutenue en production, préférer un fournisseur d'e-mails transactionnels avec SPF et DKIM configurés pour `suncamel.co.nz`.
+
+Après une modification de `.env.preprod`, recréer le conteneur applicatif afin de charger la nouvelle valeur :
 
 ```bash
 sudo docker compose --env-file .env.preprod -f compose.preprod.yaml up -d --force-recreate app
 ```
 
-L’expéditeur utilisé par les messages de réinitialisation est `no-reply@suncamel.co.nz`. Le serveur SMTP doit autoriser cette adresse et le domaine doit disposer des enregistrements SPF/DKIM adaptés.
+Les e-mails sont placés dans la file Messenger `async`. Un worker doit donc être actif dans chaque environnement qui envoie réellement des messages :
+
+```bash
+php bin/console messenger:consume async --time-limit=3600
+```
+
+Après confirmation du paiement par le webhook Stripe, le client reçoit le récapitulatif de sa réservation (vélos, quantités, dates et heures, total et lien vers les Terms & Conditions). Une copie opérationnelle contenant aussi l’adresse du client est envoyée à `guilhem.camel@gmail.com`.
 
 ## Configuration Stripe
 

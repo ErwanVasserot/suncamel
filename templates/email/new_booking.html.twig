@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><title>New SunCamel booking</title></head>
+<body style="margin:0;background:#f4f1e8;color:#172554;font-family:Arial,sans-serif">
+<div style="max-width:640px;margin:0 auto;padding:32px 20px">
+    <div style="background:#fff;border-radius:16px;padding:32px">
+        <h1 style="margin-top:0;color:#172554">New paid booking</h1>
+        <p><strong>Reference:</strong> {{ booking.reference }}</p>
+        <p><strong>Customer:</strong> <a href="mailto:{{ booking.email }}">{{ booking.email }}</a></p>
+        <p><strong>Paid:</strong> {{ booking.paidAt|date('d F Y \a\t H:i', timezone) }}</p>
+
+        <h2 style="font-size:20px">Rental details</h2>
+        {% for item in booking.items %}
+            <div style="border-top:1px solid #e2e8f0;padding:16px 0">
+                <p style="margin:0 0 8px"><strong>{{ item.quantity }} × {{ item.product.title }}</strong></p>
+                <p style="margin:0">Pickup: {{ item.pickupAt|date('l d F Y \a\t H:i', timezone) }}</p>
+                <p style="margin:4px 0 0">Return: {{ item.returnAt|date('l d F Y \a\t H:i', timezone) }}</p>
+            </div>
+        {% endfor %}
+
+        <p><strong>Total:</strong> {{ booking.currency }} {{ (booking.totalAmount / 100)|number_format(2, '.', ',') }}</p>
+        <p><a href="{{ terms_url }}" style="color:#2563eb">Terms &amp; Conditions</a></p>
+    </div>
+</div>
+</body>
+</html>

@@ -23,8 +23,11 @@ class Booking
     private string $reference = '';
 
     #[ORM\ManyToOne]
-    #[ORM\JoinColumn(nullable: false)]
+    #[ORM\JoinColumn(nullable: true)]
     private ?User $user = null;
+
+    #[ORM\Column(length: 180)]
+    private string $email = '';
 
     #[ORM\Column(length: 20)]
     private string $status = self::STATUS_PENDING;
@@ -62,7 +65,9 @@ class Booking
     public function getReference(): string { return $this->reference; }
     public function setReference(string $reference): self { $this->reference = $reference; return $this; }
     public function getUser(): ?User { return $this->user; }
-    public function setUser(User $user): self { $this->user = $user; return $this; }
+    public function setUser(?User $user): self { $this->user = $user; return $this; }
+    public function getEmail(): string { return $this->email; }
+    public function setEmail(string $email): self { $this->email = strtolower(trim($email)); return $this; }
     public function getStatus(): string { return $this->status; }
     public function setStatus(string $status): self { $this->status = $status; return $this; }
     public function getTotalAmount(): int { return $this->totalAmount; }

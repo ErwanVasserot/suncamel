@@ -13,4 +13,14 @@ final class BookingTest extends TestCase
 
         self::assertSame('NZD', $booking->getCurrency());
     }
+
+    public function testEmailIsNormalizedAndBookingCanBeOwnedByAGuest(): void
+    {
+        $booking = (new Booking())
+            ->setUser(null)
+            ->setEmail(' Guest@Example.COM ');
+
+        self::assertNull($booking->getUser());
+        self::assertSame('guest@example.com', $booking->getEmail());
+    }
 }

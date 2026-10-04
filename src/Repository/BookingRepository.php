@@ -83,4 +83,17 @@ class BookingRepository extends ServiceEntityRepository
             ->getQuery()
             ->getResult();
     }
+
+    public function claimGuestBookings(User $user): int
+    {
+        return $this->createQueryBuilder('b')
+            ->update()
+            ->set('b.user', ':user')
+            ->andWhere('b.user IS NULL')
+            ->andWhere('b.email = :email')
+            ->setParameter('user', $user)
+            ->setParameter('email', $user->getEmail())
+            ->getQuery()
+            ->execute();
+    }
 }

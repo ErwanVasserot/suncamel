@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Entity\User;
+use App\Repository\BookingRepository;
 use App\Repository\UserRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -14,6 +15,7 @@ use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Security\Http\Authentication\AuthenticationUtils;
+use Symfony\Bundle\SecurityBundle\Security;
 
 class SecurityController extends AbstractController
 {
@@ -34,15 +36,18 @@ class SecurityController extends AbstractController
     public function register(
         Request $request,
         UserRepository $users,
+        BookingRepository $bookings,
         UserPasswordHasherInterface $passwordHasher,
         EntityManagerInterface $entityManager,
+        Security $security,
     ): Response {
         if ($this->getUser() !== null) {
             return $this->redirectToRoute('home');
         }
 
         $errors = [];
-        $email = '';
+        $fromCheckout = $request->getSession()->get('registration_from_checkout', false) === true;
+        $email = $fromCheckout ? (string) $request->getSession()->get('registration_email', '') : '';
 
         if ($request->isMethod('POST')) {
             $email = strtolower(trim((string) $request->request->get('email', '')));
@@ -73,6 +78,16 @@ class SecurityController extends AbstractController
 
                 $entityManager->persist($user);
                 $entityManager->flush();
+                $bookings->claimGuestBookings($user);
+
+                if ($fromCheckout) {
+                    $request->getSession()->remove('registration_from_checkout');
+                    $request->getSession()->remove('registration_email');
+                    $security->login($user);
+                    $this->addFlash('success', 'Account created. You can now complete your booking.');
+
+                    return $this->redirectToRoute('cart_show');
+                }
 
                 $this->addFlash('success', 'Account created. You can now login.');
 
@@ -83,6 +98,7 @@ class SecurityController extends AbstractController
         return $this->render('security/register.html.twig', [
             'email' => $email,
             'errors' => $errors,
+            'from_checkout' => $fromCheckout,
         ]);
     }
 

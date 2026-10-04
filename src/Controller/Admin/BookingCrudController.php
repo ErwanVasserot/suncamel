@@ -8,6 +8,7 @@ use EasyCorp\Bundle\EasyAdminBundle\Config\Crud;
 use EasyCorp\Bundle\EasyAdminBundle\Controller\AbstractCrudController;
 use EasyCorp\Bundle\EasyAdminBundle\Field\AssociationField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\DateTimeField;
+use EasyCorp\Bundle\EasyAdminBundle\Field\EmailField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\IdField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\MoneyField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\TextField;
@@ -29,6 +30,7 @@ class BookingCrudController extends AbstractCrudController
         yield IdField::new('id')->hideOnForm();
         yield TextField::new('reference', 'Reference');
         yield AssociationField::new('user', 'Client');
+        yield EmailField::new('email', 'E-mail');
         yield TextField::new('status', 'Statut');
         yield MoneyField::new('totalAmount', 'Total')->setCurrencyPropertyPath('currency')->setStoredAsCents();
         yield DateTimeField::new('createdAt', 'Créée le')->hideOnForm();

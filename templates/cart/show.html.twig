@@ -60,14 +60,21 @@
                     <aside class="h-fit rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
                         <div class="flex justify-between text-xl font-semibold"><span>Total</span><span>NZ${{ (total_amount / 100)|number_format(2, '.', ',') }}</span></div>
                         <p class="mt-2 text-sm text-slate-500">The total is calculated from the number of rental days.</p>
-                        {% if app.user %}
-                            <form class="mt-6" method="post" action="{{ path('checkout_create') }}" data-turbo="false">
-                                <input type="hidden" name="_csrf_token" value="{{ csrf_token('checkout') }}">
-                                <button class="btn btn-primary w-full" type="submit"{{ false in availability ? ' disabled' : '' }}>Proceed to payment</button>
-                            </form>
-                        {% else %}
-                            <a class="btn btn-primary mt-6 w-full" href="{{ path('app_login') }}">Login to checkout</a>
-                        {% endif %}
+                        <form class="mt-6 grid gap-3" method="post" action="{{ path('checkout_create') }}" data-turbo="false">
+                            <input type="hidden" name="_csrf_token" value="{{ csrf_token('checkout') }}">
+                            <label class="grid gap-2 text-sm font-semibold text-slate-700">
+                                Email address
+                                <input class="rounded-lg border border-slate-300 px-4 py-3 text-base font-normal" type="email" name="email" value="{{ app.user ? app.user.email : '' }}" autocomplete="email" required>
+                            </label>
+                            <p class="text-sm text-slate-500">We will send your booking confirmation to this address. No account is required.</p>
+                            {% if not app.user %}
+                                <label class="flex items-center gap-3 text-sm font-semibold text-slate-700">
+                                    <input class="h-4 w-4 rounded border-slate-300" type="checkbox" name="want_account" value="1">
+                                    I want an account
+                                </label>
+                            {% endif %}
+                            <button class="btn btn-primary w-full" type="submit"{{ false in availability ? ' disabled' : '' }}>Proceed to payment</button>
+                        </form>
                     </aside>
                 </div>
             {% endif %}

@@ -8,6 +8,7 @@ use App\Entity\User;
 use App\Repository\BookingRepository;
 use App\Repository\RentalClosureRepository;
 use App\Service\CartService;
+use App\Service\BookingEmailService;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\DBAL\LockMode;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -37,10 +38,25 @@ class CheckoutController extends AbstractController
     #[Route('/checkout', name: 'checkout_create', methods: ['POST'], priority: 30)]
     public function create(Request $request, CartService $cart, BookingRepository $bookings, RentalClosureRepository $closures, EntityManagerInterface $entityManager): Response
     {
-        $this->denyAccessUnlessGranted('ROLE_USER');
         if (!$this->isCsrfTokenValid('checkout', (string) $request->request->get('_csrf_token'))) {
             throw $this->createAccessDeniedException('Invalid checkout token.');
         }
+
+        $email = strtolower(trim((string) $request->request->get('email')));
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            $this->addFlash('error', 'Enter a valid email address to proceed to payment.');
+            return $this->redirectToRoute('cart_show');
+        }
+
+        if ($this->getUser() === null && $request->request->getBoolean('want_account')) {
+            $request->getSession()->set('registration_from_checkout', true);
+            $request->getSession()->set('registration_email', $email);
+
+            return $this->redirectToRoute('app_register');
+        }
+        $request->getSession()->remove('registration_from_checkout');
+        $request->getSession()->remove('registration_email');
+
         if ($this->stripeSecretKey === '') {
             throw new \RuntimeException('STRIPE_SECRET_KEY is not configured. Add a Stripe test key to .env.local.');
         }
@@ -67,10 +83,8 @@ class CheckoutController extends AbstractController
             }
         }
 
-        $user = $this->getUser();
-        if (!$user instanceof User) {
-            throw $this->createAccessDeniedException();
-        }
+        $authenticatedUser = $this->getUser();
+        $user = $authenticatedUser instanceof User ? $authenticatedUser : null;
 
         $entityManager->beginTransaction();
         try {
@@ -86,6 +100,7 @@ class CheckoutController extends AbstractController
             $booking = (new Booking())
                 ->setReference('SC-' . strtoupper(bin2hex(random_bytes(5))))
                 ->setUser($user)
+                ->setEmail($email)
                 ->setCurrency($this->stripeCurrency)
                 ->setTotalAmount($cart->totalAmount());
 
@@ -120,6 +135,7 @@ class CheckoutController extends AbstractController
             }
             $booking->setStripeSessionId($sessionId);
             $entityManager->flush();
+            $request->getSession()->set('checkout_booking_reference', $booking->getReference());
         } catch (\Throwable $exception) {
             $booking->setStatus(Booking::STATUS_CANCELLED);
             $entityManager->flush();
@@ -136,8 +152,9 @@ class CheckoutController extends AbstractController
     {
         $reference = (string) $request->query->get('booking');
         $booking = $bookings->findOneBy(['reference' => $reference]);
-        if ($booking instanceof Booking && $booking->getUser() === $this->getUser()) {
+        if ($booking instanceof Booking && $this->canAccessBooking($request, $booking)) {
             $cart->clear();
+            $request->getSession()->remove('checkout_booking_reference');
         }
 
         return $this->render('checkout/status.html.twig', [
@@ -152,9 +169,10 @@ class CheckoutController extends AbstractController
     {
         $reference = (string) $request->query->get('booking');
         $booking = $bookings->findOneBy(['reference' => $reference, 'status' => Booking::STATUS_PENDING]);
-        if ($booking instanceof Booking && $booking->getUser() === $this->getUser()) {
+        if ($booking instanceof Booking && $this->canAccessBooking($request, $booking)) {
             $booking->setStatus(Booking::STATUS_CANCELLED);
             $entityManager->flush();
+            $request->getSession()->remove('checkout_booking_reference');
         }
 
         return $this->render('checkout/status.html.twig', [
@@ -165,7 +183,7 @@ class CheckoutController extends AbstractController
     }
 
     #[Route('/stripe/webhook', name: 'stripe_webhook', methods: ['POST'], priority: 50)]
-    public function webhook(Request $request, BookingRepository $bookings, EntityManagerInterface $entityManager): JsonResponse
+    public function webhook(Request $request, BookingRepository $bookings, EntityManagerInterface $entityManager, BookingEmailService $bookingEmails): JsonResponse
     {
         $payload = $request->getContent();
         $signatureError = $this->stripeSignatureError($payload, (string) $request->headers->get('Stripe-Signature'));
@@ -185,6 +203,7 @@ class CheckoutController extends AbstractController
                 $booking->setStripeSessionId((string) ($session['id'] ?? $booking->getStripeSessionId()));
                 $booking->markPaid();
                 $entityManager->flush();
+                $bookingEmails->sendBookingConfirmedEmails($booking);
             }
         }
 
@@ -210,7 +229,7 @@ class CheckoutController extends AbstractController
             'success_url' => $this->generateUrl('checkout_success', ['booking' => $booking->getReference()], UrlGeneratorInterface::ABSOLUTE_URL) . '&session_id={CHECKOUT_SESSION_ID}',
             'cancel_url' => $this->generateUrl('checkout_cancel', ['booking' => $booking->getReference()], UrlGeneratorInterface::ABSOLUTE_URL),
             'client_reference_id' => $booking->getReference(),
-            'customer_email' => $booking->getUser()?->getUserIdentifier(),
+            'customer_email' => $booking->getEmail(),
             'metadata[booking_reference]' => $booking->getReference(),
             'expires_at' => (string) $booking->getExpiresAt()->getTimestamp(),
         ];
@@ -269,5 +288,18 @@ class CheckoutController extends AbstractController
         }
 
         return 'Signature does not match the configured webhook secret.';
+    }
+
+    private function canAccessBooking(Request $request, Booking $booking): bool
+    {
+        $user = $this->getUser();
+        if ($user instanceof User && $booking->getUser() === $user) {
+            return true;
+        }
+
+        return hash_equals(
+            $booking->getReference(),
+            (string) $request->getSession()->get('checkout_booking_reference', ''),
+        );
     }
 }
