@@ -26,8 +26,8 @@ class BookingRepository extends ServiceEntityRepository
             ->andWhere('i.returnAt > :pickup')
             ->andWhere('(b.status = :paid OR (b.status = :pending AND b.expiresAt > :now))')
             ->setParameter('product', $product)
-            ->setParameter('pickup', $pickup)
-            ->setParameter('return', $return)
+            ->setParameter('pickup', $this->toStorageTimezone($pickup))
+            ->setParameter('return', $this->toStorageTimezone($return))
             ->setParameter('paid', Booking::STATUS_PAID)
             ->setParameter('pending', Booking::STATUS_PENDING)
             ->setParameter('now', new \DateTimeImmutable())
@@ -45,8 +45,8 @@ class BookingRepository extends ServiceEntityRepository
             ->andWhere('i.pickupAt < :end')
             ->andWhere('i.returnAt > :start')
             ->andWhere('(b.status = :paid OR (b.status = :pending AND b.expiresAt > :now))')
-            ->setParameter('start', $start)
-            ->setParameter('end', $end)
+            ->setParameter('start', $this->toStorageTimezone($start))
+            ->setParameter('end', $this->toStorageTimezone($end))
             ->setParameter('paid', Booking::STATUS_PAID)
             ->setParameter('pending', Booking::STATUS_PENDING)
             ->setParameter('now', new \DateTimeImmutable())
@@ -95,5 +95,10 @@ class BookingRepository extends ServiceEntityRepository
             ->setParameter('email', $user->getEmail())
             ->getQuery()
             ->execute();
+    }
+
+    private function toStorageTimezone(\DateTimeImmutable $date): \DateTimeImmutable
+    {
+        return $date->setTimezone(new \DateTimeZone('UTC'));
     }
 }

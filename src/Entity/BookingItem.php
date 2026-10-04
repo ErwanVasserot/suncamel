@@ -7,6 +7,9 @@ use Doctrine\ORM\Mapping as ORM;
 #[ORM\Entity]
 class BookingItem
 {
+    private const RENTAL_TIMEZONE = 'Pacific/Auckland';
+    private const STORAGE_TIMEZONE = 'UTC';
+
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
@@ -41,9 +44,9 @@ class BookingItem
     public function getProduct(): ?Product { return $this->product; }
     public function setProduct(Product $product): self { $this->product = $product; return $this; }
     public function getPickupAt(): \DateTimeImmutable { return $this->pickupAt; }
-    public function setPickupAt(\DateTimeImmutable $pickupAt): self { $this->pickupAt = $pickupAt; return $this; }
+    public function setPickupAt(\DateTimeImmutable $pickupAt): self { $this->pickupAt = $pickupAt->setTimezone(new \DateTimeZone(self::STORAGE_TIMEZONE)); return $this; }
     public function getReturnAt(): \DateTimeImmutable { return $this->returnAt; }
-    public function setReturnAt(\DateTimeImmutable $returnAt): self { $this->returnAt = $returnAt; return $this; }
+    public function setReturnAt(\DateTimeImmutable $returnAt): self { $this->returnAt = $returnAt->setTimezone(new \DateTimeZone(self::STORAGE_TIMEZONE)); return $this; }
     public function getQuantity(): int { return $this->quantity; }
     public function setQuantity(int $quantity): self { $this->quantity = max(1, $quantity); return $this; }
     public function getUnitAmount(): int { return $this->unitAmount; }
@@ -57,8 +60,9 @@ class BookingItem
             return $this->dayCount . ' days';
         }
 
-        $start = $this->pickupAt->format('H:i');
-        $end = $this->returnAt->format('H:i');
+        $timezone = new \DateTimeZone(self::RENTAL_TIMEZONE);
+        $start = $this->pickupAt->setTimezone($timezone)->format('H:i');
+        $end = $this->returnAt->setTimezone($timezone)->format('H:i');
 
         return match ([$start, $end]) {
             ['08:00', '12:00'] => 'Morning (08:00–12:00)',
