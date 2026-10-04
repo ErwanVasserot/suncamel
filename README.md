@@ -112,6 +112,13 @@ L’application est généralement accessible à l’adresse `https://localhost:
 
 ## Comptes et mots de passe
 
+La création d’un compte est facultative pour commander. Le panier demande toujours une adresse e-mail, enregistrée directement sur la réservation et utilisée pour la confirmation. Un visiteur peut ensuite :
+
+- payer sans compte ;
+- cocher **I want an account**, créer son compte avec l’adresse préremplie, puis revenir automatiquement au panier en étant connecté.
+
+Lors de la création du compte, les anciennes réservations invitées portant exactement la même adresse e-mail sont automatiquement rattachées à ce compte. Les nouvelles réservations effectuées en étant connecté apparaissent dans **My account → My orders**.
+
 Un utilisateur connecté peut modifier son mot de passe depuis le menu du site ou directement sur :
 
 ```text
@@ -216,10 +223,12 @@ php bin/console cache:clear
 2. Les dates sont transmises au catalogue puis à la fiche produit.
 3. Le vélo est ajouté au panier conservé dans la session.
 4. Le serveur vérifie à nouveau le stock pour la période choisie.
-5. Au passage en caisse, une réservation `pending` bloque temporairement le stock.
-6. Une session Stripe Checkout est créée avec la référence de réservation.
-7. Le webhook Stripe passe la réservation à l’état `paid` après confirmation du paiement.
-8. Une session Stripe annulée, expirée ou échouée libère le stock.
+5. Le client renseigne son adresse e-mail et choisit éventuellement de créer un compte.
+6. Au passage en caisse, une réservation `pending` bloque temporairement le stock.
+7. Une session Stripe Checkout est créée avec la référence de réservation et l’adresse e-mail.
+8. Le webhook Stripe passe la réservation à l’état `paid` après confirmation du paiement.
+9. Deux e-mails sont placés dans la file Messenger : la confirmation client et la notification administrative.
+10. Une session Stripe annulée, expirée ou échouée libère le stock.
 
 Les réservations temporaires expirent après environ 31 minutes. La disponibilité ignore automatiquement les réservations `pending` expirées.
 
@@ -234,7 +243,7 @@ Les réservations prises en compte sont :
 
 Une transaction et un verrou pessimiste sur le produit protègent la création d’une réservation contre les paiements simultanés.
 
-Le fuseau métier utilisé pour les dates de location est `Pacific/Auckland`.
+Le fuseau métier utilisé pour les dates de location est `Pacific/Auckland`. Les horaires sont convertis et stockés en UTC dans MariaDB, puis reconvertis vers `Pacific/Auckland` pour le panier, le compte client, l’administration, Stripe et les e-mails. Cette règle évite les décalages et prend en charge automatiquement l’heure d’été néo-zélandaise.
 
 ## Tarification des locations
 
@@ -530,6 +539,20 @@ sudo docker compose --env-file .env.preprod -f compose.preprod.yaml up -d --buil
 sudo docker compose --env-file .env.preprod -f compose.preprod.yaml ps
 ```
 
+La commande démarre trois services :
+
+- `app`, l’application web Apache/PHP ;
+- `database`, MariaDB ;
+- `worker`, le consommateur Messenger chargé notamment des e-mails.
+
+Les migrations sont appliquées automatiquement au démarrage de `app`. Vérifier ensuite le worker et les migrations :
+
+```bash
+sudo docker compose --env-file .env.preprod -f compose.preprod.yaml ps worker
+sudo docker compose --env-file .env.preprod -f compose.preprod.yaml logs --tail=100 worker
+sudo docker compose --env-file .env.preprod -f compose.preprod.yaml exec app php bin/console doctrine:migrations:status --env=prod --no-debug
+```
+
 La base MariaDB, les images produits et les données d’exécution sont conservées dans des volumes dédiés. Un arrêt simple préserve ces données :
 
 ```bash
@@ -545,6 +568,26 @@ sudo docker compose --env-file .env.preprod -f compose.preprod.yaml down --volum
 Cette dernière commande supprime la base et les images téléversées de préproduction. Elle ne doit être exécutée qu’après avoir confirmé qu’aucune donnée ne doit être conservée.
 
 ## Dépannage
+
+### Les e-mails restent en attente
+
+Vérifier que le worker est démarré et consulter la file :
+
+```bash
+sudo docker compose --env-file .env.preprod -f compose.preprod.yaml ps worker
+sudo docker compose --env-file .env.preprod -f compose.preprod.yaml logs --tail=100 worker
+sudo docker compose --env-file .env.preprod -f compose.preprod.yaml exec app php bin/console messenger:stats --env=prod
+```
+
+Le transport `null://null` accepte les messages mais ne les distribue pas. En préproduction, vérifier sans exposer le secret que `MAILER_DSN` utilise bien `smtps` et `smtp.gmail.com` :
+
+```bash
+sudo docker compose --env-file .env.preprod -f compose.preprod.yaml exec app php -r '
+$parts = parse_url(getenv("MAILER_DSN") ?: "");
+echo "scheme: ".($parts["scheme"] ?? "absent").PHP_EOL;
+echo "host: ".($parts["host"] ?? "absent").PHP_EOL;
+'
+```
 
 ### Les styles récemment modifiés ne sont pas visibles
 
