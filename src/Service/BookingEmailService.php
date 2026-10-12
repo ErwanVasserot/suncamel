@@ -3,6 +3,7 @@
 namespace App\Service;
 
 use App\Entity\Booking;
+use App\Repository\BookingEmailContentRepository;
 use Symfony\Bridge\Twig\Mime\TemplatedEmail;
 use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\Mime\Address;
@@ -16,6 +17,7 @@ final class BookingEmailService
     public function __construct(
         private readonly MailerInterface $mailer,
         private readonly UrlGeneratorInterface $urlGenerator,
+        private readonly BookingEmailContentRepository $emailContent,
     ) {
     }
 
@@ -25,6 +27,7 @@ final class BookingEmailService
 
         $context = [
             'booking' => $booking,
+            'email_content' => $this->emailContent->getContent(),
             'timezone' => new \DateTimeZone(self::RENTAL_TIMEZONE),
             'terms_url' => $this->urlGenerator->generate(
                 'page_show',
@@ -47,5 +50,18 @@ final class BookingEmailService
             ->subject(sprintf('New booking %s', $booking->getReference()))
             ->htmlTemplate('email/new_booking.html.twig')
             ->context($context));
+    }
+
+    public function sendBookingCancelledEmail(Booking $booking): void
+    {
+        $this->mailer->send((new TemplatedEmail())
+            ->from(new Address('no-reply@suncamel.co.nz', 'SunCamel'))
+            ->to($booking->getEmail())
+            ->subject(sprintf('Your SunCamel booking %s has been cancelled', $booking->getReference()))
+            ->htmlTemplate('email/booking_cancellation.html.twig')
+            ->context([
+                'booking' => $booking,
+                'email_content' => $this->emailContent->getContent(),
+            ]));
     }
 }

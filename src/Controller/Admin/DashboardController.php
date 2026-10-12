@@ -144,6 +144,7 @@ class DashboardController extends AbstractDashboardController
         yield MenuItem::linkTo(PricingTierCrudController::class, 'Tarifs dégressifs', 'fa fa-tags');
         yield MenuItem::linkTo(ProductImageCrudController::class, 'Images produit', 'fa fa-image');
         yield MenuItem::linkTo(BookingCrudController::class, 'Réservations', 'fa fa-calendar-check');
+        yield MenuItem::linkTo(BookingEmailContentCrudController::class, 'Messages de commande', 'fa fa-envelope');
         yield MenuItem::linkTo(RentalClosureCrudController::class, 'Fermetures des locations', 'fa fa-calendar-xmark');
         yield MenuItem::linkTo(FaqItemCrudController::class, 'Q&A', 'fa fa-question-circle');
         yield MenuItem::linkTo(TermsAndConditionsCrudController::class, 'Terms & Conditions', 'fa fa-file-contract');

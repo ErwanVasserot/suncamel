@@ -56,6 +56,11 @@
                                 </div>
                             </article>
                         {% endfor %}
+                        <div>
+                            <a class="btn border border-blue-800 bg-white text-blue-800 hover:bg-blue-50" href="{{ path('page_show', {slug: 'collections/all'}) }}">
+                                Continue booking with another bike
+                            </a>
+                        </div>
                     </div>
                     <aside class="h-fit rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
                         <div class="flex justify-between text-xl font-semibold"><span>Total</span><span>NZ${{ (total_amount / 100)|number_format(2, '.', ',') }}</span></div>

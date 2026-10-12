@@ -5,7 +5,7 @@
 <div style="max-width:640px;margin:0 auto;padding:32px 20px">
     <div style="background:#fff;border-radius:16px;padding:32px">
         <h1 style="margin-top:0;color:#172554">Your booking is confirmed</h1>
-        <p>Thank you for booking with SunCamel. Your payment has been received.</p>
+        {{ email_content.confirmationMessage|raw }}
         <p><strong>Booking reference:</strong> {{ booking.reference }}</p>
 
         <h2 style="font-size:20px">Your bikes</h2>

@@ -1,0 +1,14 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><title>Booking cancelled</title></head>
+<body style="margin:0;background:#f4f1e8;color:#172554;font-family:Arial,sans-serif">
+<div style="max-width:640px;margin:0 auto;padding:32px 20px">
+    <div style="background:#fff;border-radius:16px;padding:32px">
+        <h1 style="margin-top:0;color:#172554">Your booking has been cancelled</h1>
+        {{ email_content.cancellationMessage|raw }}
+        <p><strong>Booking reference:</strong> {{ booking.reference }}</p>
+        <p>If you have any questions, reply to this email or call us on <a href="tel:+64275645263">027 564 5263</a>.</p>
+    </div>
+</div>
+</body>
+</html>
