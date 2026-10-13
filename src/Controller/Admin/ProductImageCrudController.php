@@ -26,6 +26,10 @@ class ProductImageCrudController extends AbstractCrudController
             ->setUploadDir('public/images/suncamel/products')
             ->setUploadedFileNamePattern('[slug]-gallery-[timestamp].[extension]');
         yield TextField::new('alt', 'Texte alternatif')->setRequired(false);
+        yield IntegerField::new('zoomPercent', 'Zoom (%)')
+            ->setRequired(false)
+            ->setFormTypeOption('attr', ['min' => 25, 'max' => 300, 'step' => 5])
+            ->setHelp('De 25 à 300 %. Laisser vide conserve le rendu actuel (100 % pour la première image, 150 % pour les suivantes).');
         yield IntegerField::new('position', 'Ordre');
     }
 }

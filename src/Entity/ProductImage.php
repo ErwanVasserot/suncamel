@@ -4,6 +4,7 @@ namespace App\Entity;
 
 use App\Repository\ProductImageRepository;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: ProductImageRepository::class)]
 class ProductImage
@@ -26,6 +27,10 @@ class ProductImage
     #[ORM\Column(type: 'integer', options: ['default' => 0])]
     private int $position = 0;
 
+    #[ORM\Column(type: 'smallint', nullable: true)]
+    #[Assert\Range(min: 25, max: 300)]
+    private ?int $zoomPercent = null;
+
     public function __toString(): string
     {
         return trim(($this->product?->getTitle() ?? 'Image') . ' #' . ($this->id ?? 'new'));
@@ -40,4 +45,6 @@ class ProductImage
     public function setAlt(?string $alt): self { $this->alt = $alt; return $this; }
     public function getPosition(): int { return $this->position; }
     public function setPosition(int $position): self { $this->position = $position; return $this; }
+    public function getZoomPercent(): ?int { return $this->zoomPercent; }
+    public function setZoomPercent(?int $zoomPercent): self { $this->zoomPercent = $zoomPercent; return $this; }
 }

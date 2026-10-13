@@ -4,19 +4,23 @@
         <div class="grid gap-4 md:overflow-y-auto md:pr-3" data-product-detail-target="gallery">
             {% if data.gallery is defined %}
                 {% for image in data.gallery %}
+                    {% set image_src = image is iterable ? image.src : image %}
+                    {% set image_zoom = image is iterable and image.zoom_percent is not null ? image.zoom_percent : (loop.first ? 100 : 150) %}
                     {% if loop.first %}
                         <div class="relative h-100 w-full overflow-hidden rounded-3xl bg-white shadow-[0_18px_50px_rgba(10,18,38,0.12)]">
                             <img
                                 class="h-full w-full object-cover"
-                                src="{{ image }}"
+                                style="transform: scale({{ image_zoom / 100 }});"
+                                src="{{ image_src }}"
                                 alt="{{ data.title }}"
                             >
                         </div>
                     {% else %}
                         <div class="relative h-100 w-full overflow-hidden rounded-3xl bg-white shadow-[0_18px_50px_rgba(10,18,38,0.12)]">
                             <img
-                                class="h-full w-full object-contain scale-150"
-                                src="{{ image }}"
+                                class="h-full w-full object-contain"
+                                style="transform: scale({{ image_zoom / 100 }});"
+                                src="{{ image_src }}"
                                 alt="{{ data.title }}"
                             >
                         </div>

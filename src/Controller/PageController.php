@@ -862,7 +862,10 @@ class PageController extends AbstractController
         $gallery = [];
         foreach ($product->getImages() as $image) {
             if ($image->getImage() !== null && $image->getImage() !== '') {
-                $gallery[] = $this->productImagePath($image->getImage());
+                $gallery[] = [
+                    'src' => $this->productImagePath($image->getImage()),
+                    'zoom_percent' => $image->getZoomPercent(),
+                ];
             }
         }
 
