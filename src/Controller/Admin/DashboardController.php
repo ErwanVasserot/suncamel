@@ -142,6 +142,7 @@ class DashboardController extends AbstractDashboardController
         yield MenuItem::linkToDashboard('Dashboard', 'fa fa-home');
         yield MenuItem::linkTo(ProductCrudController::class, 'Types de produit', 'fa fa-bicycle');
         yield MenuItem::linkTo(PricingTierCrudController::class, 'Tarifs dégressifs', 'fa fa-tags');
+        yield MenuItem::linkTo(PromotionCrudController::class, 'Promotions', 'fa fa-percent');
         yield MenuItem::linkTo(ProductImageCrudController::class, 'Images produit', 'fa fa-image');
         yield MenuItem::linkTo(BookingCrudController::class, 'Réservations', 'fa fa-calendar-check');
         yield MenuItem::linkTo(BookingEmailContentCrudController::class, 'Messages de commande', 'fa fa-envelope');

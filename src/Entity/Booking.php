@@ -35,11 +35,35 @@ class Booking
     #[ORM\Column]
     private int $totalAmount = 0;
 
+    #[ORM\Column]
+    private int $subtotalAmount = 0;
+
+    #[ORM\Column]
+    private int $discountAmount = 0;
+
+    #[ORM\Column(length: 50, nullable: true)]
+    private ?string $promotionCode = null;
+
+    #[ORM\Column(nullable: true)]
+    private ?int $promotionPercent = null;
+
     #[ORM\Column(length: 3)]
     private string $currency = 'NZD';
 
     #[ORM\Column(length: 255, nullable: true, unique: true)]
     private ?string $stripeSessionId = null;
+
+    #[ORM\Column(length: 255, nullable: true, unique: true)]
+    private ?string $stripePaymentIntentId = null;
+
+    #[ORM\Column(length: 255, nullable: true, unique: true)]
+    private ?string $stripeRefundId = null;
+
+    #[ORM\Column(length: 30, nullable: true)]
+    private ?string $stripeRefundStatus = null;
+
+    #[ORM\Column(nullable: true)]
+    private ?\DateTimeImmutable $refundedAt = null;
 
     #[ORM\Column]
     private \DateTimeImmutable $createdAt;
@@ -71,11 +95,47 @@ class Booking
     public function getStatus(): string { return $this->status; }
     public function setStatus(string $status): self { $this->status = $status; return $this; }
     public function getTotalAmount(): int { return $this->totalAmount; }
-    public function setTotalAmount(int $totalAmount): self { $this->totalAmount = $totalAmount; return $this; }
+    public function setTotalAmount(int $totalAmount): self
+    {
+        $this->totalAmount = max(0, $totalAmount);
+        if ($this->subtotalAmount === 0) {
+            $this->subtotalAmount = $this->totalAmount;
+        }
+
+        return $this;
+    }
+    public function getSubtotalAmount(): int { return $this->subtotalAmount; }
+    public function getDiscountAmount(): int { return $this->discountAmount; }
+    public function getPromotionCode(): ?string { return $this->promotionCode; }
+    public function getPromotionPercent(): ?int { return $this->promotionPercent; }
+    public function applyPromotion(string $code, int $percent, int $subtotal, int $discount): self
+    {
+        $this->promotionCode = strtoupper(trim($code));
+        $this->promotionPercent = $percent;
+        $this->subtotalAmount = max(0, $subtotal);
+        $this->discountAmount = max(0, min($discount, $this->subtotalAmount));
+        $this->totalAmount = $this->subtotalAmount - $this->discountAmount;
+
+        return $this;
+    }
     public function getCurrency(): string { return strtoupper($this->currency); }
     public function setCurrency(string $currency): self { $this->currency = strtoupper($currency); return $this; }
     public function getStripeSessionId(): ?string { return $this->stripeSessionId; }
     public function setStripeSessionId(?string $stripeSessionId): self { $this->stripeSessionId = $stripeSessionId; return $this; }
+    public function getStripePaymentIntentId(): ?string { return $this->stripePaymentIntentId; }
+    public function setStripePaymentIntentId(?string $stripePaymentIntentId): self { $this->stripePaymentIntentId = $stripePaymentIntentId; return $this; }
+    public function getStripeRefundId(): ?string { return $this->stripeRefundId; }
+    public function getStripeRefundStatus(): ?string { return $this->stripeRefundStatus; }
+    public function setStripeRefundStatus(string $stripeRefundStatus): self { $this->stripeRefundStatus = $stripeRefundStatus; return $this; }
+    public function getRefundedAt(): ?\DateTimeImmutable { return $this->refundedAt; }
+    public function markRefunded(string $refundId, string $status): self
+    {
+        $this->stripeRefundId = $refundId;
+        $this->stripeRefundStatus = $status;
+        $this->refundedAt = new \DateTimeImmutable();
+
+        return $this;
+    }
     public function getCreatedAt(): \DateTimeImmutable { return $this->createdAt; }
     public function getExpiresAt(): \DateTimeImmutable { return $this->expiresAt; }
     public function getPaidAt(): ?\DateTimeImmutable { return $this->paidAt; }

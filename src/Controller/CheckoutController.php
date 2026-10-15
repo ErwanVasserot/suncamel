@@ -9,6 +9,7 @@ use App\Repository\BookingRepository;
 use App\Repository\RentalClosureRepository;
 use App\Service\CartService;
 use App\Service\BookingEmailService;
+use App\Service\PromotionService;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\DBAL\LockMode;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -36,7 +37,7 @@ class CheckoutController extends AbstractController
     }
 
     #[Route('/checkout', name: 'checkout_create', methods: ['POST'], priority: 30)]
-    public function create(Request $request, CartService $cart, BookingRepository $bookings, RentalClosureRepository $closures, EntityManagerInterface $entityManager): Response
+    public function create(Request $request, CartService $cart, PromotionService $promotions, BookingRepository $bookings, RentalClosureRepository $closures, EntityManagerInterface $entityManager): Response
     {
         if (!$this->isCsrfTokenValid('checkout', (string) $request->request->get('_csrf_token'))) {
             throw $this->createAccessDeniedException('Invalid checkout token.');
@@ -97,12 +98,23 @@ class CheckoutController extends AbstractController
                 }
             }
 
+            $subtotal = $cart->totalAmount();
+            $promotion = $promotions->current();
+            $discount = $promotions->discountAmount($subtotal, $promotion);
             $booking = (new Booking())
                 ->setReference('SC-' . strtoupper(bin2hex(random_bytes(5))))
                 ->setUser($user)
                 ->setEmail($email)
                 ->setCurrency($this->stripeCurrency)
-                ->setTotalAmount($cart->totalAmount());
+                ->setTotalAmount($subtotal);
+            if ($promotion !== null) {
+                $booking->applyPromotion(
+                    $promotion->getCode(),
+                    $promotion->getDiscountPercent(),
+                    $subtotal,
+                    $discount,
+                );
+            }
 
             foreach ($cartItems as $item) {
                 $booking->addItem((new BookingItem())
@@ -148,12 +160,13 @@ class CheckoutController extends AbstractController
     }
 
     #[Route('/checkout/success', name: 'checkout_success', methods: ['GET'], priority: 40)]
-    public function success(Request $request, BookingRepository $bookings, CartService $cart): Response
+    public function success(Request $request, BookingRepository $bookings, CartService $cart, PromotionService $promotions): Response
     {
         $reference = (string) $request->query->get('booking');
         $booking = $bookings->findOneBy(['reference' => $reference]);
         if ($booking instanceof Booking && $this->canAccessBooking($request, $booking)) {
             $cart->clear();
+            $promotions->clear();
             $request->getSession()->remove('checkout_booking_reference');
         }
 
@@ -201,6 +214,10 @@ class CheckoutController extends AbstractController
             $booking = is_string($reference) ? $bookings->findOneBy(['reference' => $reference]) : null;
             if ($booking instanceof Booking && $booking->getStatus() === Booking::STATUS_PENDING && ($session['payment_status'] ?? null) === 'paid') {
                 $booking->setStripeSessionId((string) ($session['id'] ?? $booking->getStripeSessionId()));
+                $paymentIntentId = $session['payment_intent'] ?? null;
+                if (is_string($paymentIntentId) && $paymentIntentId !== '') {
+                    $booking->setStripePaymentIntentId($paymentIntentId);
+                }
                 $booking->markPaid();
                 $entityManager->flush();
                 $bookingEmails->sendBookingConfirmedEmails($booking);
@@ -213,6 +230,22 @@ class CheckoutController extends AbstractController
             $booking = is_string($reference) ? $bookings->findOneBy(['reference' => $reference]) : null;
             if ($booking instanceof Booking && $booking->getStatus() === Booking::STATUS_PENDING) {
                 $booking->setStatus(Booking::STATUS_CANCELLED);
+                $entityManager->flush();
+            }
+        }
+
+        if (in_array(($event['type'] ?? null), ['refund.updated', 'refund.failed'], true)) {
+            $refund = $event['data']['object'] ?? [];
+            $refundId = $refund['id'] ?? null;
+            $reference = $refund['metadata']['booking_reference'] ?? null;
+            $booking = is_string($refundId) ? $bookings->findOneBy(['stripeRefundId' => $refundId]) : null;
+            if (!$booking instanceof Booking && is_string($reference)) {
+                $booking = $bookings->findOneBy(['reference' => $reference]);
+            }
+
+            $refundStatus = $refund['status'] ?? null;
+            if ($booking instanceof Booking && is_string($refundStatus) && $refundStatus !== '') {
+                $booking->setStripeRefundStatus($refundStatus);
                 $entityManager->flush();
             }
         }
@@ -234,6 +267,21 @@ class CheckoutController extends AbstractController
             'expires_at' => (string) $booking->getExpiresAt()->getTimestamp(),
         ];
 
+        if ($booking->getPromotionCode() !== null) {
+            $body['metadata[promotion_code]'] = $booking->getPromotionCode();
+            $body['line_items[0][quantity]'] = '1';
+            $body['line_items[0][price_data][currency]'] = strtolower($booking->getCurrency());
+            $body['line_items[0][price_data][unit_amount]'] = (string) $booking->getTotalAmount();
+            $body['line_items[0][price_data][product_data][name]'] = 'SunCamel bike rental — '.$booking->getReference();
+            $body['line_items[0][price_data][product_data][description]'] = sprintf(
+                'Promotion %s (%d%% off)',
+                $booking->getPromotionCode(),
+                $booking->getPromotionPercent(),
+            );
+
+            return $this->requestStripeCheckoutSession($body);
+        }
+
         foreach ($booking->getItems() as $index => $item) {
             $product = $item->getProduct();
             $body["line_items[$index][quantity]"] = (string) $item->getQuantity();
@@ -247,6 +295,14 @@ class CheckoutController extends AbstractController
             $body["line_items[$index][price_data][product_data][metadata][return]"] = $item->getReturnAt()->format(DATE_ATOM);
         }
 
+        return $this->requestStripeCheckoutSession($body);
+    }
+
+    /** @param array<string, string> $body
+     *  @return array<string, mixed>
+     */
+    private function requestStripeCheckoutSession(array $body): array
+    {
         $response = $this->httpClient->request('POST', 'https://api.stripe.com/v1/checkout/sessions', [
             'auth_bearer' => $this->stripeSecretKey,
             'body' => $body,

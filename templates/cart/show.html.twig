@@ -63,7 +63,30 @@
                         </div>
                     </div>
                     <aside class="h-fit rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
-                        <div class="flex justify-between text-xl font-semibold"><span>Total</span><span>NZ${{ (total_amount / 100)|number_format(2, '.', ',') }}</span></div>
+                        <form class="mb-6 grid gap-3 border-b border-slate-200 pb-6" method="post" action="{{ path('cart_promotion_apply') }}">
+                            <input type="hidden" name="_csrf_token" value="{{ csrf_token('cart_promotion') }}">
+                            <label class="grid gap-2 text-sm font-semibold text-slate-700">
+                                Promotion code
+                                <div class="flex gap-2">
+                                    <input class="min-w-0 flex-1 rounded-lg border border-slate-300 px-3 py-2 uppercase" type="text" name="code" value="{{ promotion ? promotion.code : '' }}" autocomplete="off" required>
+                                    <button class="btn border border-blue-800 bg-white px-4 text-blue-800 hover:bg-blue-50" type="submit">Apply</button>
+                                </div>
+                            </label>
+                        </form>
+                        {% if promotion %}
+                            <div class="mb-5 rounded-xl bg-green-50 p-4 text-sm text-green-800">
+                                <div class="flex items-center justify-between gap-3">
+                                    <strong>{{ promotion.code }} · {{ promotion.discountPercent }}% off</strong>
+                                    <form method="post" action="{{ path('cart_promotion_remove') }}">
+                                        <input type="hidden" name="_csrf_token" value="{{ csrf_token('cart_promotion_remove') }}">
+                                        <button class="font-semibold underline" type="submit">Remove</button>
+                                    </form>
+                                </div>
+                            </div>
+                            <div class="flex justify-between text-sm text-slate-600"><span>Subtotal</span><span>NZ${{ (subtotal_amount / 100)|number_format(2, '.', ',') }}</span></div>
+                            <div class="mt-2 flex justify-between text-sm font-semibold text-green-700"><span>Discount</span><span>−NZ${{ (discount_amount / 100)|number_format(2, '.', ',') }}</span></div>
+                        {% endif %}
+                        <div class="{{ promotion ? 'mt-4 border-t border-slate-200 pt-4 ' : '' }}flex justify-between text-xl font-semibold"><span>Total</span><span>NZ${{ (total_amount / 100)|number_format(2, '.', ',') }}</span></div>
                         <p class="mt-2 text-sm text-slate-500">The total is calculated from the number of rental days.</p>
                         <form class="mt-6 grid gap-3" method="post" action="{{ path('checkout_create') }}" data-turbo="false">
                             <input type="hidden" name="_csrf_token" value="{{ csrf_token('checkout') }}">

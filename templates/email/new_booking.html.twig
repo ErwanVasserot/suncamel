@@ -18,6 +18,9 @@
             </div>
         {% endfor %}
 
+        {% if booking.promotionCode %}
+            <p><strong>Promotion:</strong> {{ booking.promotionCode }} ({{ booking.promotionPercent }}% off, −{{ booking.currency }} {{ (booking.discountAmount / 100)|number_format(2, '.', ',') }})</p>
+        {% endif %}
         <p><strong>Total:</strong> {{ booking.currency }} {{ (booking.totalAmount / 100)|number_format(2, '.', ',') }}</p>
         <p><a href="{{ terms_url }}" style="color:#2563eb">Terms &amp; Conditions</a></p>
     </div>

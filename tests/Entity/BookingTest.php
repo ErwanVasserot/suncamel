@@ -36,4 +36,29 @@ final class BookingTest extends TestCase
         self::assertSame('2026-12-09 19:00', $item->getPickupAt()->format('Y-m-d H:i'));
         self::assertSame('Morning (08:00–12:00)', $item->getPeriodLabel());
     }
+
+    public function testBookingStoresStripeRefundDetails(): void
+    {
+        $booking = (new Booking())->markRefunded('re_test_123', 'succeeded');
+
+        self::assertSame('re_test_123', $booking->getStripeRefundId());
+        self::assertSame('succeeded', $booking->getStripeRefundStatus());
+        self::assertInstanceOf(\DateTimeImmutable::class, $booking->getRefundedAt());
+
+        $booking->setStripeRefundStatus('failed');
+        self::assertSame('failed', $booking->getStripeRefundStatus());
+    }
+
+    public function testBookingKeepsThePromotionSnapshot(): void
+    {
+        $booking = (new Booking())
+            ->setTotalAmount(10000)
+            ->applyPromotion('summer-10', 10, 10000, 1000);
+
+        self::assertSame('SUMMER-10', $booking->getPromotionCode());
+        self::assertSame(10, $booking->getPromotionPercent());
+        self::assertSame(10000, $booking->getSubtotalAmount());
+        self::assertSame(1000, $booking->getDiscountAmount());
+        self::assertSame(9000, $booking->getTotalAmount());
+    }
 }

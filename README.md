@@ -137,13 +137,15 @@ Pour éviter de révéler si une adresse est inscrite, la réponse affichée est
 
 ### Configuration des e-mails
 
-Symfony Mailer utilise la variable `MAILER_DSN`. La valeur de développement suivante accepte les messages sans les distribuer :
+Symfony Mailer utilise la variable `MAILER_DSN`. En développement, les messages sont envoyés à Mailpit et sont consultables dans le navigateur :
 
-```dotenv
-MAILER_DSN=null://null
+```bash
+docker compose up -d mailer
 ```
 
-Pour que les messages soient réellement envoyés en préproduction ou en production, remplacer cette valeur par le DSN SMTP du fournisseur utilisé.
+Ouvrir ensuite <http://localhost:8025>. Le transport Messenger est synchrone en développement : aucun worker séparé n'est nécessaire pour voir les messages. Mailpit intercepte les e-mails localement et ne les remet pas dans la véritable boîte du destinataire.
+
+Pour que les messages soient réellement envoyés en préproduction ou en production, utiliser le DSN SMTP du fournisseur configuré pour cet environnement.
 
 #### Utiliser Gmail SMTP
 
@@ -203,6 +205,8 @@ POST https://votre-domaine.example/stripe/webhook
 - `checkout.session.async_payment_succeeded`
 - `checkout.session.async_payment_failed`
 - `checkout.session.expired`
+- `refund.updated`
+- `refund.failed`
 
 Pour tester localement avec Stripe CLI :
 
@@ -225,10 +229,12 @@ php bin/console cache:clear
 4. Le serveur vérifie à nouveau le stock pour la période choisie.
 5. Le client renseigne son adresse e-mail et choisit éventuellement de créer un compte.
 6. Au passage en caisse, une réservation `pending` bloque temporairement le stock.
-7. Une session Stripe Checkout est créée avec la référence de réservation et l’adresse e-mail.
-8. Le webhook Stripe passe la réservation à l’état `paid` après confirmation du paiement.
-9. Deux e-mails sont placés dans la file Messenger : la confirmation client et la notification administrative.
-10. Une session Stripe annulée, expirée ou échouée libère le stock.
+7. Le code promotionnel éventuel est revérifié et la réservation conserve le sous-total, le pourcentage et le montant de la remise.
+8. Une session Stripe Checkout est créée avec la référence de réservation, l’adresse e-mail et le total après remise.
+9. Le webhook Stripe passe la réservation à l’état `paid` après confirmation du paiement.
+10. Deux e-mails sont placés dans la file Messenger : la confirmation client et la notification administrative.
+11. Une session Stripe annulée, expirée ou échouée libère le stock.
+12. Depuis l’administration, l’annulation d’une réservation payée rembourse intégralement le `PaymentIntent` avant de libérer le stock et d’envoyer l’e-mail d’annulation. Stripe rembourse ainsi le montant réellement payé après remise, jamais le sous-total avant promotion.
 
 Les réservations temporaires expirent après environ 31 minutes. La disponibilité ignore automatiquement les réservations `pending` expirées.
 
@@ -251,6 +257,10 @@ Chaque produit possède un prix demi-journée et un prix journée. Sur une seule
 
 Les paliers dégressifs se configurent dans **Administration > Tarifs dégressifs**. Un palier associe un nombre minimum de jours à un prix journalier. Pour une durée donnée, le palier le plus élevé atteint s’applique à l’ensemble des jours. Sans palier applicable, le prix journée du produit est utilisé.
 
+Les promotions se configurent dans **Administration > Promotions**. Chaque code définit une réduction de 1 à 99 % et peut être activé ou désactivé immédiatement. Plusieurs promotions peuvent être enregistrées, mais un seul code s’applique à un panier. Le client saisit le code dans son panier ; le serveur le valide de nouveau avant de créer la session Stripe et conserve la remise appliquée dans la réservation.
+
+Le montant est calculé en centimes et arrondi au centime le plus proche. Lorsqu’une promotion est utilisée, Stripe Checkout reçoit directement le total remisé. Une annulation administrative crée un remboursement intégral du paiement Stripe ; la réponse de Stripe est contrôlée pour vérifier que le montant remboursé correspond au total payé de la réservation.
+
 ## Administration
 
 L’administration est disponible sur :
@@ -263,6 +273,7 @@ Elle nécessite le rôle `ROLE_ADMIN` et permet de gérer :
 
 - les produits et leur stock ;
 - les prix demi-journée, journée et les paliers dégressifs ;
+- les codes promotionnels, leur pourcentage de réduction et leur activation ;
 - les images des produits ;
 - les questions et réponses de la FAQ ;
 - les Terms & Conditions avec un éditeur HTML dédié ;
@@ -306,8 +317,9 @@ tests/                    Infrastructure PHPUnit
 
 - `Product` : vélo, prix, stock, caractéristiques et collection.
 - `ProductImage` : galerie associée à un produit.
-- `Booking` : réservation, client, statut, montant et session Stripe.
+- `Booking` : réservation, client, statut, sous-total, remise, total payé, paiement et remboursement Stripe.
 - `BookingItem` : vélo, période, quantité et prix figé au moment de la commande.
+- `Promotion` : code promotionnel, pourcentage de réduction et état actif/inactif.
 - `User` : compte client ou administrateur et données temporaires de réinitialisation du mot de passe.
 - `FaqItem` : contenu administrable de la FAQ.
 - `Page` : page composée de métadonnées et de blocs JSON.
@@ -323,6 +335,8 @@ tests/                    Infrastructure PHPUnit
 | `GET` | `/cart` | Panier |
 | `POST` | `/cart/add/{slug}` | Ajout d’un vélo au panier |
 | `POST` | `/cart/remove/{key}` | Suppression d’un article |
+| `POST` | `/cart/promotion` | Validation et application d’un code promotionnel |
+| `POST` | `/cart/promotion/remove` | Retrait du code promotionnel du panier |
 | `POST` | `/checkout` | Création de la réservation et de la session Stripe |
 | `GET` | `/checkout/success` | Retour après paiement |
 | `GET` | `/checkout/cancel` | Retour après annulation |

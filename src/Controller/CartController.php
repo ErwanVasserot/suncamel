@@ -7,6 +7,7 @@ use App\Repository\BookingRepository;
 use App\Repository\ProductRepository;
 use App\Repository\RentalClosureRepository;
 use App\Service\CartService;
+use App\Service\PromotionService;
 use App\Service\RentalPeriodFactory;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\RedirectResponse;
@@ -17,7 +18,7 @@ use Symfony\Component\Routing\Attribute\Route;
 class CartController extends AbstractController
 {
     #[Route('/cart', name: 'cart_show', methods: ['GET'], priority: 30)]
-    public function show(CartService $cart, BookingRepository $bookings, RentalClosureRepository $closures): Response
+    public function show(CartService $cart, PromotionService $promotions, BookingRepository $bookings, RentalClosureRepository $closures): Response
     {
         $items = $cart->items();
         $availableQuantities = $this->availableQuantities($items, $bookings, $closures);
@@ -26,12 +27,50 @@ class CartController extends AbstractController
             $availability[$item['key']] = $availableQuantities[$item['key']] >= $item['quantity'];
         }
 
+        $subtotal = $cart->totalAmount();
+        $promotion = $promotions->current();
+        $discount = $promotions->discountAmount($subtotal, $promotion);
+
         return $this->render('cart/show.html.twig', [
             'items' => $items,
-            'total_amount' => $cart->totalAmount(),
+            'subtotal_amount' => $subtotal,
+            'discount_amount' => $discount,
+            'total_amount' => $subtotal - $discount,
+            'promotion' => $promotion,
             'availability' => $availability,
             'available_quantities' => $availableQuantities,
         ]);
+    }
+
+    #[Route('/cart/promotion', name: 'cart_promotion_apply', methods: ['POST'], priority: 30)]
+    public function applyPromotion(Request $request, PromotionService $promotions): RedirectResponse
+    {
+        if (!$this->isCsrfTokenValid('cart_promotion', (string) $request->request->get('_csrf_token'))) {
+            throw $this->createAccessDeniedException('Invalid promotion token.');
+        }
+
+        $promotion = $promotions->apply((string) $request->request->get('code'));
+        $this->addFlash(
+            $promotion === null ? 'error' : 'success',
+            $promotion === null
+                ? 'This promotion code is invalid or inactive.'
+                : sprintf('Promotion code %s applied: %d%% off.', $promotion->getCode(), $promotion->getDiscountPercent()),
+        );
+
+        return $this->redirectToRoute('cart_show');
+    }
+
+    #[Route('/cart/promotion/remove', name: 'cart_promotion_remove', methods: ['POST'], priority: 30)]
+    public function removePromotion(Request $request, PromotionService $promotions): RedirectResponse
+    {
+        if (!$this->isCsrfTokenValid('cart_promotion_remove', (string) $request->request->get('_csrf_token'))) {
+            throw $this->createAccessDeniedException('Invalid promotion token.');
+        }
+
+        $promotions->clear();
+        $this->addFlash('success', 'Promotion code removed.');
+
+        return $this->redirectToRoute('cart_show');
     }
 
     #[Route('/cart/add/{slug}', name: 'cart_add', methods: ['POST'], priority: 30)]
