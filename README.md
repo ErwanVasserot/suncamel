@@ -581,6 +581,219 @@ sudo docker compose --env-file .env.preprod -f compose.preprod.yaml down --volum
 
 Cette dernière commande supprime la base et les images téléversées de préproduction. Elle ne doit être exécutée qu’après avoir confirmé qu’aucune donnée ne doit être conservée.
 
+## Production sur Voyager VPS
+
+La production officielle utilise le domaine `suncamel.co.nz`, un VPS Voyager, Nginx comme reverse proxy et une stack Docker isolée de la préproduction. Les commandes suivantes supposent un VPS Ubuntu récent et un compte disposant de `sudo`.
+
+### 1. Préparer le VPS et le DNS
+
+Dans la zone DNS du domaine, faire pointer le domaine racine vers l’adresse IPv4 publique du VPS et faire de `www` un alias du domaine principal :
+
+```text
+A      @      IP_PUBLIQUE_DU_VPS
+CNAME  www    suncamel.co.nz
+```
+
+N’ajouter un enregistrement `AAAA` que si IPv6 est effectivement configuré sur le VPS. Contrôler la propagation avec :
+
+```bash
+dig +short suncamel.co.nz
+dig +short www.suncamel.co.nz
+```
+
+Installer les composants système nécessaires, puis Docker Engine et le plugin Compose en suivant la [documentation Docker pour Ubuntu](https://docs.docker.com/engine/install/ubuntu/) :
+
+```bash
+sudo apt update
+sudo apt upgrade -y
+sudo apt install -y nginx git ufw snapd
+sudo ufw allow OpenSSH
+sudo ufw allow 'Nginx Full'
+sudo ufw enable
+```
+
+Vérifier l’installation :
+
+```bash
+sudo docker version
+sudo docker compose version
+sudo ufw status
+```
+
+### 2. Installer le dépôt
+
+Utiliser de préférence un compte de déploiement non-root et une deploy key GitHub en lecture seule :
+
+```bash
+sudo mkdir -p /srv/suncamel
+sudo chown "$USER":"$USER" /srv/suncamel
+git clone git@github.com:ErwanVasserot/suncamel.git /srv/suncamel
+cd /srv/suncamel
+git checkout main
+git pull --ff-only origin main
+```
+
+### 3. Configurer les secrets de production
+
+La stack Docker attend les variables MariaDB définies dans l’exemple de préproduction. Créer un fichier spécifique, non versionné et lisible uniquement par son propriétaire :
+
+```bash
+cd /srv/suncamel
+cp .env.preprod.example .env.prod
+chmod 600 .env.prod
+```
+
+Configurer `.env.prod` sans réutiliser les clés de préproduction :
+
+```dotenv
+APP_SECRET=replace-with-a-long-random-secret
+DEFAULT_URI=https://suncamel.co.nz
+
+MARIADB_PASSWORD=replace-with-a-long-random-value
+MARIADB_ROOT_PASSWORD=replace-with-another-long-random-value
+
+SUNCAMEL_HTTP_PORT=18080
+MAILER_DSN=smtps://user:password@smtp.example:465
+
+STRIPE_SECRET_KEY=sk_live_replace_me
+STRIPE_CURRENCY=nzd
+STRIPE_WEBHOOK_SECRET=whsec_replace_me
+```
+
+Des secrets peuvent être générés avec `openssl rand -hex 32` ou `openssl rand -base64 36`. Les caractères spéciaux présents dans `MAILER_DSN` doivent être encodés comme dans une URL.
+
+Le fichier `.env.prod.example` décrit le déploiement historique SiteHost avec une base externe. Pour la stack Docker Voyager, `.env.preprod.example` est donc la bonne base de configuration.
+
+### 4. Démarrer la stack de production
+
+Le nom de projet explicite empêche toute collision de conteneurs ou de volumes avec la préproduction :
+
+```bash
+sudo docker compose \
+  --project-name suncamel-prod \
+  --env-file .env.prod \
+  -f compose.preprod.yaml \
+  up -d --build
+```
+
+Le service `app` applique automatiquement les migrations Doctrine au démarrage. Le port applicatif reste lié à `127.0.0.1` et n’est donc accessible que depuis le VPS :
+
+```bash
+sudo docker compose --project-name suncamel-prod --env-file .env.prod -f compose.preprod.yaml ps
+curl -I http://127.0.0.1:18080
+```
+
+### 5. Configurer Nginx
+
+Créer `/etc/nginx/sites-available/suncamel.co.nz` :
+
+```nginx
+server {
+    listen 80;
+    listen [::]:80;
+
+    server_name suncamel.co.nz www.suncamel.co.nz;
+    client_max_body_size 20M;
+
+    location / {
+        proxy_pass http://127.0.0.1:18080;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-Forwarded-Port $server_port;
+    }
+}
+```
+
+Activer le site et vérifier Nginx :
+
+```bash
+sudo ln -s /etc/nginx/sites-available/suncamel.co.nz /etc/nginx/sites-enabled/suncamel.co.nz
+sudo rm -f /etc/nginx/sites-enabled/default
+sudo nginx -t
+sudo systemctl reload nginx
+curl -I http://suncamel.co.nz
+```
+
+### 6. Activer HTTPS
+
+Installer Certbot puis demander un certificat pour le domaine principal et `www` :
+
+```bash
+sudo snap install --classic certbot
+sudo ln -s /snap/bin/certbot /usr/local/bin/certbot
+sudo certbot --nginx -d suncamel.co.nz -d www.suncamel.co.nz
+sudo certbot renew --dry-run
+```
+
+Choisir la redirection automatique de HTTP vers HTTPS. Le domaine doit déjà répondre sur le port 80 avant l’émission du certificat. Voir les [instructions officielles Certbot](https://certbot.eff.org/instructions?os=ubuntufocal&ws=nginx).
+
+### 7. Configurer Stripe en mode live
+
+Dans le tableau de bord Stripe en mode production, créer cet endpoint :
+
+```text
+https://suncamel.co.nz/stripe/webhook
+```
+
+Activer uniquement les événements nécessaires :
+
+- `checkout.session.completed`
+- `checkout.session.async_payment_succeeded`
+- `checkout.session.async_payment_failed`
+- `checkout.session.expired`
+- `refund.updated`
+- `refund.failed`
+
+Reporter le secret de signature généré dans `STRIPE_WEBHOOK_SECRET`, puis recréer l’application et le worker pour recharger l’environnement :
+
+```bash
+sudo docker compose \
+  --project-name suncamel-prod \
+  --env-file .env.prod \
+  -f compose.preprod.yaml \
+  up -d --force-recreate app worker
+```
+
+Ne jamais réutiliser une clé `sk_test_` ou un secret webhook de préproduction en production.
+
+### 8. Contrôler le déploiement
+
+```bash
+sudo docker compose --project-name suncamel-prod --env-file .env.prod -f compose.preprod.yaml ps
+sudo docker compose --project-name suncamel-prod --env-file .env.prod -f compose.preprod.yaml logs --tail=100 app worker
+sudo docker compose --project-name suncamel-prod --env-file .env.prod -f compose.preprod.yaml exec app php bin/console doctrine:migrations:status --env=prod --no-debug
+sudo docker compose --project-name suncamel-prod --env-file .env.prod -f compose.preprod.yaml exec app php bin/console doctrine:schema:validate --env=prod --no-debug
+sudo docker compose --project-name suncamel-prod --env-file .env.prod -f compose.preprod.yaml exec app php bin/console messenger:stats --env=prod
+```
+
+Tester ensuite le parcours complet : inscription, panier, promotion, paiement live de faible montant, e-mails, webhook de confirmation, annulation, remboursement du montant remisé et téléversement d’une image dans EasyAdmin.
+
+### 9. Déployer une version suivante
+
+```bash
+cd /srv/suncamel
+git status --short
+git pull --ff-only origin main
+sudo docker compose --project-name suncamel-prod --env-file .env.prod -f compose.preprod.yaml up -d --build
+```
+
+Toujours contrôler les conteneurs, les migrations et les logs après la reconstruction.
+
+### 10. Sauvegardes et précautions
+
+Configurer avant l’ouverture publique :
+
+- un snapshot régulier du VPS Voyager ;
+- une sauvegarde quotidienne de MariaDB stockée hors du VPS ;
+- une sauvegarde du volume des images produits ;
+- une politique de rétention et un test réel de restauration ;
+- une supervision de l’espace disque, du certificat TLS et des conteneurs.
+
+Ne jamais exécuter `docker compose down --volumes` en production : cette commande supprimerait la base et les images persistées. Avant chaque évolution importante, conserver le hash du commit actuellement déployé et réaliser une sauvegarde de la base.
+
 ## Dépannage
 
 ### Les e-mails restent en attente
