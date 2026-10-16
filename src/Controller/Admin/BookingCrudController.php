@@ -3,13 +3,13 @@
 namespace App\Controller\Admin;
 
 use App\Entity\Booking;
+use App\Repository\BookingRepository;
 use App\Service\BookingEmailService;
 use App\Service\StripeRefundService;
 use Doctrine\ORM\EntityManagerInterface;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Action;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Actions;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Crud;
-use EasyCorp\Bundle\EasyAdminBundle\Context\AdminContext;
 use EasyCorp\Bundle\EasyAdminBundle\Controller\AbstractCrudController;
 use EasyCorp\Bundle\EasyAdminBundle\Field\AssociationField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\ChoiceField;
@@ -21,6 +21,8 @@ use EasyCorp\Bundle\EasyAdminBundle\Field\MoneyField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\TextField;
 use EasyCorp\Bundle\EasyAdminBundle\Router\AdminUrlGenerator;
 use Symfony\Component\HttpFoundation\RedirectResponse;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Csrf\CsrfToken;
 use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface;
 
@@ -42,13 +44,10 @@ class BookingCrudController extends AbstractCrudController
     public function configureActions(Actions $actions): Actions
     {
         $cancel = Action::new('cancelBooking', 'Annuler', 'fa fa-ban')
-            ->linkToUrl(fn (Booking $booking): string => $this->adminUrlGenerator
-                ->unsetAll()
-                ->setController(self::class)
-                ->setAction('cancelBooking')
-                ->setEntityId($booking->getId())
-                ->set('token', $this->csrfTokenManager->getToken('cancel_booking_'.$booking->getId())->getValue())
-                ->generateUrl())
+            ->linkToRoute('admin_booking_cancel', fn (Booking $booking): array => [
+                'entityId' => $booking->getId(),
+                'token' => $this->csrfTokenManager->getToken('cancel_booking_'.$booking->getId())->getValue(),
+            ])
             ->displayIf(static fn (Booking $booking): bool => $booking->getStatus() === Booking::STATUS_PAID)
             ->renderAsForm()
             ->asDangerAction()
@@ -89,15 +88,21 @@ class BookingCrudController extends AbstractCrudController
         yield DateTimeField::new('refundedAt', 'Remboursement créé le')->hideOnForm();
     }
 
-    public function cancelBooking(AdminContext $context, EntityManagerInterface $entityManager): RedirectResponse
+    #[Route('/admin/booking/{entityId}/cancel', name: 'admin_booking_cancel', methods: ['POST'])]
+    public function cancelBooking(
+        int $entityId,
+        Request $request,
+        BookingRepository $bookings,
+        EntityManagerInterface $entityManager,
+    ): RedirectResponse
     {
-        $entityInstance = $context->getEntity()->getInstance();
+        $entityInstance = $bookings->find($entityId);
         if (!$entityInstance instanceof Booking) {
             throw $this->createNotFoundException('Réservation introuvable.');
         }
 
-        $token = new CsrfToken('cancel_booking_'.$entityInstance->getId(), (string) $context->getRequest()->query->get('token'));
-        if (!$context->getRequest()->isMethod('POST') || !$this->csrfTokenManager->isTokenValid($token)) {
+        $token = new CsrfToken('cancel_booking_'.$entityInstance->getId(), (string) $request->query->get('token'));
+        if (!$this->csrfTokenManager->isTokenValid($token)) {
             throw $this->createAccessDeniedException('Action d’annulation invalide.');
         }
 
