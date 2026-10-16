@@ -23,6 +23,7 @@ use EasyCorp\Bundle\EasyAdminBundle\Router\AdminUrlGenerator;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Security\Csrf\CsrfToken;
 use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface;
 
@@ -33,6 +34,7 @@ class BookingCrudController extends AbstractCrudController
         private readonly StripeRefundService $stripeRefunds,
         private readonly AdminUrlGenerator $adminUrlGenerator,
         private readonly CsrfTokenManagerInterface $csrfTokenManager,
+        private readonly UrlGeneratorInterface $urlGenerator,
     ) {
     }
 
@@ -44,10 +46,10 @@ class BookingCrudController extends AbstractCrudController
     public function configureActions(Actions $actions): Actions
     {
         $cancel = Action::new('cancelBooking', 'Annuler', 'fa fa-ban')
-            ->linkToRoute('admin_booking_cancel', fn (Booking $booking): array => [
+            ->linkToUrl(fn (Booking $booking): string => $this->urlGenerator->generate('admin_booking_cancel', [
                 'entityId' => $booking->getId(),
                 'token' => $this->csrfTokenManager->getToken('cancel_booking_'.$booking->getId())->getValue(),
-            ])
+            ]))
             ->displayIf(static fn (Booking $booking): bool => $booking->getStatus() === Booking::STATUS_PAID)
             ->renderAsForm()
             ->asDangerAction()
