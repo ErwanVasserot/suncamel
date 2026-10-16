@@ -51,13 +51,11 @@ class BookingCrudController extends AbstractCrudController
                 ->generateUrl())
             ->displayIf(static fn (Booking $booking): bool => $booking->getStatus() === Booking::STATUS_PAID)
             ->renderAsForm()
-            ->addCssClass('btn btn-danger')
-            ->setHtmlAttributes([
-                'data-action-confirmation' => 'true',
-                'data-action-confirmation-message' => 'Confirmer l’annulation et le remboursement Stripe intégral de cette réservation ?',
-                'data-action-confirmation-button' => 'Annuler et rembourser',
-                'data-action-variant' => 'danger',
-            ]);
+            ->asDangerAction()
+            ->askConfirmation(
+                'Confirmer l’annulation et le remboursement Stripe intégral de cette réservation ?',
+                'Annuler et rembourser',
+            );
 
         return $actions
             ->disable(Crud::PAGE_NEW)
