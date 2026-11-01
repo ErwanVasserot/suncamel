@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Content\TermsContent;
+use App\Content\RaglanContent;
 use App\Entity\Page;
 use App\Entity\Product;
 use App\Repository\FaqItemRepository;
@@ -211,6 +212,19 @@ class PageController extends AbstractController
 
     private function buildFallbackPage(string $slug): ?Page
     {
+        if ($slug === 'pages/explore-raglan') {
+            return (new Page())
+                ->setSlug($slug)
+                ->setTitle('Explore Raglan')
+                ->setIsPublished(true)
+                ->setMeta([
+                    'title' => 'Explore Raglan by E-Bike | SunCamel',
+                    'description' => 'Discover Raglan’s beaches, surf breaks, bush walks and waterfront with SunCamel’s illustrated e-bike map.',
+                    'og_image' => '/images/suncamel/explore/raglan-map.png',
+                ])
+                ->setBlocks([['type' => 'explore-raglan', 'data' => RaglanContent::data()]]);
+        }
+
         if ($slug === 'collections/all') {
             return $this->buildFallbackCollection();
         }

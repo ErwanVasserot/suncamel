@@ -1,0 +1,232 @@
+{
+  "categories": [
+    "All",
+    "Surf",
+    "Beach",
+    "Nature",
+    "Food",
+    "Adventure"
+  ],
+  "places": [
+    {
+      "id": "toto",
+      "name": "Te Toto Gorge",
+      "category": "Nature",
+      "tag": "Cliffs · Lookout · Photography",
+      "address": "Whaanga Road, Raglan",
+      "query": "Te Toto Gorge Lookout Raglan",
+      "description": "Follow the wild west coast to a dramatic lookout above the Tasman Sea. Towering cliffs, green hills and a spectacular volcanic landscape make this one of the most memorable viewpoints near Raglan. Stop for photos, enjoy the sea air and take in the sweeping coastline.",
+      "note": "Whaanga Road includes gravel sections. Confirm that the route and rental conditions permit this trip.",
+      "box": [
+        15,
+        400,
+        82,
+        23
+      ]
+    },
+    {
+      "id": "whale",
+      "name": "Whale Bay",
+      "category": "Surf",
+      "tag": "Surf watching · Rocky coast",
+      "address": "Calvert Road, Whale Bay, Raglan",
+      "query": "Whale Bay Raglan",
+      "description": "A quieter coastal spot famous for its rocky shoreline and long left-hand surf breaks. Watch experienced surfers from a safe vantage point and enjoy the relaxed atmosphere of this small seaside community.",
+      "note": "Rocky coast and powerful surf; not a beginner swimming beach.",
+      "box": [
+        104,
+        313,
+        66,
+        22
+      ]
+    },
+    {
+      "id": "manu",
+      "name": "Manu Bay",
+      "category": "Surf",
+      "tag": "Legendary surf · Ocean views",
+      "address": "Manu Bay Road, Raglan",
+      "query": "Manu Bay Reserve Raglan",
+      "description": "One of Raglan’s iconic surf locations, known for beautiful left-hand waves and its place in surf history. Find a spot overlooking the point, watch surfers glide along the waves and see the working boat ramp.",
+      "note": "Stay clear of boat-ramp traffic and slippery rocks.",
+      "box": [
+        222,
+        305,
+        63,
+        22
+      ]
+    },
+    {
+      "id": "ngarunui",
+      "name": "Ngarunui Beach",
+      "category": "Beach",
+      "tag": "Black sand · Beach walks · Surf",
+      "address": "Wainui Road beach access, Raglan",
+      "query": "Ngarunui Beach Raglan",
+      "description": "Raglan’s sweeping black-sand beach is ideal for long walks, surf lessons and sunsets. Enjoy the viewpoints above the sand before heading down to the shore and taking in the vast Tasman Sea.",
+      "note": "Swim between the flags when lifeguards are on patrol.",
+      "box": [
+        407,
+        315,
+        85,
+        24
+      ]
+    },
+    {
+      "id": "jurassic",
+      "name": "Jurassic Reserve",
+      "category": "Nature",
+      "tag": "Coastal vegetation · Nature",
+      "address": "Exact visitor access to confirm",
+      "query": "Raglan Jurassic reserve",
+      "description": "Enjoy the lush, almost prehistoric feel of Raglan’s coastal vegetation. This stop celebrates the wild green landscapes beside the surf coast.",
+      "note": "Working map name: confirm the official location and public access before publishing.",
+      "box": [
+        394,
+        225,
+        85,
+        22
+      ]
+    },
+    {
+      "id": "reef",
+      "name": "The Reef",
+      "category": "Surf",
+      "tag": "Reef waves · Coastal scenery",
+      "address": "Exact lookout to confirm",
+      "query": "Raglan reef surf break",
+      "description": "Watch swells roll across the rocky reefs that help give Raglan its celebrated surf. A scenic stop for ocean lovers and wave photography.",
+      "note": "Confirm the intended reef and a safe, publicly accessible viewpoint.",
+      "box": [
+        451,
+        144,
+        57,
+        22
+      ]
+    },
+    {
+      "id": "kite",
+      "name": "Kitesurf Beach",
+      "category": "Beach",
+      "tag": "Kitesurfing · Harbour views",
+      "address": "Exact viewing area to confirm",
+      "query": "Raglan kitesurf beach",
+      "description": "On windy days, colourful kites add excitement to the water. Watch riders harness the wind while enjoying the open coastal scenery.",
+      "note": "Confirm the actual launch and viewing area; keep clear of kites and lines.",
+      "box": [
+        562,
+        153,
+        86,
+        23
+      ]
+    },
+    {
+      "id": "bush",
+      "name": "Wainui Reserve Bush Park",
+      "category": "Nature",
+      "tag": "Native bush · Birdsong · Walking",
+      "address": "Wainui Road, Raglan",
+      "query": "Wainui Reserve Raglan",
+      "description": "Trade the ocean breeze for a sheltered walk among native plants and trees. Listen for birds, enjoy the greenery and take a refreshing nature break from the coast.",
+      "note": "Confirm trail access and secure bikes only where parking is permitted.",
+      "box": [
+        556,
+        290,
+        86,
+        32
+      ]
+    },
+    {
+      "id": "skate",
+      "name": "The Skatepark",
+      "category": "Adventure",
+      "tag": "Skating · Waterfront",
+      "address": "Papahua Reserve area, Raglan",
+      "query": "Raglan Skatepark",
+      "description": "Stop by the skatepark to watch local riders, enjoy the harbour-side atmosphere and explore nearby green spaces. It is a fun contrast to the surf beaches further along the coast.",
+      "box": [
+        699,
+        147,
+        79,
+        24
+      ]
+    },
+    {
+      "id": "airstrip",
+      "name": "The Airstrip",
+      "category": "Adventure",
+      "tag": "Open space · Local landmark",
+      "address": "Raglan Aerodrome area",
+      "query": "Raglan Aerodrome",
+      "description": "A distinctive local landmark close to the coast. Enjoy the surrounding open landscape and, if you are lucky, catch a glimpse of light aircraft from a safe public area.",
+      "note": "Active aerodrome: do not enter operational areas or cross the runway.",
+      "box": [
+        686,
+        210,
+        68,
+        23
+      ]
+    },
+    {
+      "id": "suncamel",
+      "name": "SunCamel",
+      "category": "Adventure",
+      "tag": "E-bike hire · Starting point",
+      "address": "58A Wainui Road, Raglan",
+      "query": "58A Wainui Road Raglan",
+      "description": "Your starting point for a memorable Raglan ride. Pick up your SunCamel e-bike, get comfortable with the controls and set off to discover the coast, harbour and town.",
+      "note": "Confirm pickup instructions and times when booking.",
+      "box": [
+        724,
+        291,
+        59,
+        23
+      ]
+    },
+    {
+      "id": "town",
+      "name": "Raglan Town",
+      "category": "Food",
+      "tag": "Cafés · Galleries · Shopping",
+      "address": "Bow Street, Raglan",
+      "query": "Bow Street Raglan",
+      "description": "Raglan’s lively village centre is full of independent cafés, creative shops and laid-back surf culture. Stop for coffee, browse local art and enjoy the atmosphere of this friendly coastal town.",
+      "box": [
+        893,
+        161,
+        77,
+        24
+      ]
+    },
+    {
+      "id": "wharf",
+      "name": "The Wharf",
+      "category": "Food",
+      "tag": "Fishing boats · Food · Harbour",
+      "address": "Wallis Street, Raglan",
+      "query": "Raglan Wharf",
+      "description": "Explore Raglan’s working waterfront, with fishing boats, harbour views and places to grab a bite. Take your time, watch the boats and soak up the maritime character of Whāingaroa.",
+      "box": [
+        874,
+        37,
+        68,
+        24
+      ]
+    },
+    {
+      "id": "rangitahi",
+      "name": "Rangitahi",
+      "category": "Nature",
+      "tag": "Estuary · Scenic streets",
+      "address": "Rangitahi Peninsula, Raglan",
+      "query": "Rangitahi Peninsula Raglan",
+      "description": "Discover a peaceful peninsula surrounded by tidal estuary waters. Ride through the neighbourhood on public roads, enjoy the open spaces and admire the changing light across the harbour.",
+      "box": [
+        864,
+        438,
+        62,
+        25
+      ]
+    }
+  ]
+}

@@ -26,6 +26,18 @@ Les pages publiques conservent 20 px de marge latérale sur smartphone. À parti
 
 Le catalogue utilise des cartes de même largeur et des cadres photo de même hauteur. Le calendrier de location apparaît avant le récapitulatif des dates et heures ; ses jours s’adaptent aux petits écrans.
 
+### Explore Raglan
+
+La page `/pages/explore-raglan`, accessible depuis le menu et les liens du pied de page, reprend la carte illustrée et les 14 destinations du document HTML fourni. Elle utilise l’en-tête, le pied de page, les couleurs et les boutons SunCamel. Les filtres par catégorie, les liens des étiquettes vers les fiches et les recherches Google Maps restent disponibles ; les fiches sont également lisibles sans JavaScript. Sur smartphone, seule la carte défile horizontalement pour garder ses étiquettes lisibles.
+
+Les textes et les rectangles cliquables sont enregistrés dans `resources/content/raglan.json`. Les rectangles utilisent les coordonnées du document original (1 000 × 582) et la carte conserve son ratio. L’illustration extraite est `public/images/suncamel/explore/raglan-map.png` ; la migration `Version20261101220000` l’ajoute à **Images du site**. Une image de remplacement doit conserver le cadrage et la position des étiquettes pour préserver leur alignement.
+
+Les catégories disponibles sont Surf, Beach, Nature, Food et Adventure. Un clic sur une étiquette de la carte réaffiche toutes les destinations, place le focus sur la fiche choisie et actualise l’ancre dans l’URL. Les déplacements respectent la préférence de réduction des animations du navigateur. Les filtres annoncent le nombre de résultats aux lecteurs d’écran.
+
+Les photographies des destinations n’étaient pas fournies : les fiches présentent une icône de catégorie, sans photos fictives. Les notes de confirmation concernant les lieux provisoires et leurs accès sont conservées et doivent être validées avant publication définitive du guide.
+
+Pour le déploiement, appliquer la migration et reconstruire les assets avec la procédure habituelle. La carte originale est livrée dans le dépôt ; les remplacements téléversés depuis l’administration utilisent le volume persistant des images. L’intégration a été vérifiée dans Chrome à 320, 390 et 1 440 px, avec contrôle des filtres et des liens de la carte.
+
 ## Technologies
 
 - PHP 8.4 ou supérieur

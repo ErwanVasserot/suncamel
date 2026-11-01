@@ -1,0 +1,83 @@
+{% set data = block.data ?? {} %}
+{% set icons = {Surf: 'water', Beach: 'umbrella-beach', Nature: 'leaf', Food: 'mug-hot', Adventure: 'bicycle'} %}
+<div class="explore-raglan" data-controller="explore-raglan">
+    <section class="explore-hero py-12 md:py-20">
+        <div class="container">
+            <div class="mx-auto max-w-4xl text-center">
+                <p class="text-sm font-semibold uppercase tracking-[0.2em] text-blue-800">The SunCamel local guide</p>
+                <h1 class="mt-4 text-4xl font-bold leading-tight text-blue-950 md:text-6xl">Explore <span class="explore-highlight">Raglan</span><br>by E-Bike</h1>
+                <p class="mx-auto mt-6 max-w-2xl text-base leading-relaxed text-slate-600 md:text-lg">From world-famous surf breaks and black-sand beaches to peaceful bush walks and waterfront cafés, discover the best of Whāingaroa at your own pace.</p>
+                <div class="mt-8 flex flex-wrap justify-center gap-3">
+                    <a class="btn btn-primary gap-2" href="#raglan-map"><i class="fa-solid fa-map" aria-hidden="true"></i> Explore the map</a>
+                    <a class="btn btn-soft" href="/collections/all">Find your E-Bike</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="container pb-12 md:pb-16" aria-labelledby="raglan-map-title">
+        <div class="mb-5 flex flex-wrap items-end justify-between gap-3">
+            <div>
+                <p class="text-xs font-semibold uppercase tracking-[0.2em] text-blue-800">A little inspiration for your ride</p>
+                <h2 id="raglan-map-title" class="mt-2 text-2xl font-semibold text-blue-950 md:text-3xl">Your Raglan roadmap</h2>
+            </div>
+            <span class="rounded-full bg-amber-100 px-4 py-2 text-sm font-semibold text-blue-950">14 places to explore</span>
+        </div>
+        <div id="raglan-map" class="explore-map-scroll" tabindex="0" role="region" aria-label="Illustrated Raglan map. On small screens, scroll horizontally to explore." aria-describedby="raglan-map-hint">
+            <div class="explore-map-canvas">
+                <img src="{{ site_image('/images/suncamel/explore/raglan-map.png') }}" width="1643" height="957" alt="SunCamel illustrated Raglan e-bike roadmap showing beaches, nature stops, town, wharf and recommended routes" fetchpriority="high">
+                {% for place in data.places %}
+                    <a class="explore-hotspot" href="#{{ place.id }}" style="left: {{ place.box[0] / 10 }}%; top: {{ place.box[1] / 582 * 100 }}%; width: {{ place.box[2] / 10 }}%; height: {{ place.box[3] / 582 * 100 }}%;" data-action="explore-raglan#jump" data-place="{{ place.id }}" aria-label="Read about {{ place.name }}" title="Explore {{ place.name }}"></a>
+                {% endfor %}
+            </div>
+        </div>
+        <p id="raglan-map-hint" class="mt-4 text-sm leading-relaxed text-slate-500">Click or tap a destination label to discover the stop. On a phone, swipe across the map to see all the labels. This illustration is a visitor guide, not a navigation map.</p>
+    </section>
+
+    <section id="raglan-destinations" class="container pb-16" aria-labelledby="raglan-destinations-title">
+        <h2 id="raglan-destinations-title" class="text-3xl font-semibold text-blue-950 md:text-4xl">Find your kind of adventure</h2>
+        <p class="mt-3 text-base text-slate-600">A beach stop, a coffee break or a little time in nature. Where will you go?</p>
+        <div class="mt-6 flex flex-wrap gap-2" role="group" aria-label="Filter destinations">
+            {% for category in data.categories %}
+                <button class="explore-filter" type="button" aria-pressed="{{ loop.first ? 'true' : 'false' }}" data-explore-raglan-target="filter" data-category="{{ category }}" data-action="explore-raglan#filter">
+                    {% if icons[category] is defined %}<i class="fa-solid fa-{{ icons[category] }}" aria-hidden="true"></i>{% endif %}
+                    {{ category == 'All' ? 'All places' : category }}
+                </button>
+            {% endfor %}
+        </div>
+        <p class="mt-4 text-sm text-slate-500" role="status" aria-live="polite" aria-atomic="true" data-explore-raglan-target="count">{{ data.places|length }} places to explore</p>
+        <div class="mt-6 grid grid-cols-1 items-stretch gap-6 md:grid-cols-2 xl:grid-cols-3">
+            {% for place in data.places %}
+                <article id="{{ place.id }}" class="explore-card" data-explore-raglan-target="card" data-category="{{ place.category }}">
+                    <div class="explore-card-banner" aria-hidden="true">
+                        <span class="explore-stop-number">{{ '%02d'|format(loop.index) }}</span>
+                        <i class="fa-solid fa-{{ icons[place.category] }}"></i>
+                    </div>
+                    <div class="flex flex-1 flex-col p-6 md:p-7">
+                        <p class="text-xs font-semibold uppercase tracking-wider text-blue-800">{{ place.tag }}</p>
+                        <h3 class="mt-2 text-2xl font-semibold text-blue-950" tabindex="-1">{{ place.name }}</h3>
+                        <p class="mt-4 text-base leading-relaxed text-slate-600">{{ place.description }}</p>
+                        <div class="mt-5 rounded-xl bg-slate-50 p-4 text-sm leading-relaxed text-slate-600">
+                            <p><i class="fa-solid fa-location-dot mr-1 text-blue-800" aria-hidden="true"></i> <span class="font-semibold">Location:</span> {{ place.address }}</p>
+                            {% if place.note is defined %}<p class="mt-3 border-t border-slate-200 pt-3 text-amber-800">{{ place.note }}</p>{% endif %}
+                        </div>
+                        <div class="mt-auto flex flex-wrap items-center justify-between gap-4 pt-6 text-sm font-semibold">
+                            <a class="explore-text-link" href="https://www.google.com/maps/search/?api=1&amp;query={{ place.query|url_encode }}" target="_blank" rel="noopener noreferrer">Open Google Maps <i class="fa-solid fa-arrow-up-right-from-square ml-1" aria-hidden="true"></i></a>
+                            <a class="explore-text-link" href="#raglan-map">Back to map ↑</a>
+                        </div>
+                    </div>
+                </article>
+            {% endfor %}
+        </div>
+        <p class="mt-6 text-sm leading-relaxed text-slate-500">Check conditions, public access and bike suitability before setting out. Locations marked for confirmation in this guide have not yet been verified.</p>
+    </section>
+
+    <section class="container pb-16">
+        <div class="rounded-3xl bg-blue-800 px-6 py-12 text-center text-white md:px-12 md:py-16">
+            <p class="text-sm font-semibold uppercase tracking-[0.2em] text-amber-300">Less rush. More Raglan.</p>
+            <h2 class="mt-3 text-3xl font-semibold md:text-4xl">Your Raglan adventure starts here</h2>
+            <p class="mx-auto mt-4 max-w-2xl text-base leading-relaxed text-white/85">Take the scenic route, stop for the views and explore with a SunCamel electric bike.</p>
+            <a class="btn mt-7 bg-amber-300 px-6 py-3 text-blue-950 hover:bg-amber-200" href="/collections/all">Explore E-Bike Rentals <i class="fa-solid fa-arrow-right ml-3" aria-hidden="true"></i></a>
+        </div>
+    </section>
+</div>

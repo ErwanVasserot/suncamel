@@ -1,0 +1,109 @@
+.explore-hero {
+    background: linear-gradient(180deg, #eff6ff 0%, #f8fafc 70%, transparent 100%);
+}
+
+.explore-highlight {
+    text-decoration: underline;
+    text-decoration-color: #fcd34d;
+    text-decoration-thickness: 0.12em;
+    text-underline-offset: 0.12em;
+}
+
+.explore-map-scroll {
+    overflow-x: auto;
+    border-radius: 24px;
+    background: #07559b;
+    box-shadow: 0 18px 50px rgb(10 18 38 / 12%);
+    scroll-margin-top: 14rem;
+}
+
+.explore-map-scroll:focus-visible {
+    outline: 3px solid #1e40af;
+    outline-offset: 5px;
+}
+
+.explore-map-canvas {
+    position: relative;
+    min-width: 760px;
+}
+
+.explore-map-canvas img {
+    display: block;
+    width: 100%;
+    height: auto;
+}
+
+.explore-hotspot {
+    position: absolute;
+    z-index: 1;
+    border-radius: 6px;
+    touch-action: manipulation;
+}
+
+.explore-hotspot:hover,
+.explore-hotspot:focus-visible {
+    background: rgb(255 255 255 / 20%);
+    outline: 3px solid #fcd34d;
+    outline-offset: 3px;
+}
+
+.explore-filter {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 44px;
+    padding: 10px 18px;
+    border: 1px solid #cbd5e1;
+    border-radius: 999px;
+    background: #fff;
+    color: #1e40af;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.explore-filter[aria-pressed="true"] {
+    border-color: #1e40af;
+    background: #1e40af;
+    color: #fff;
+}
+
+.explore-filter:focus-visible,
+.explore-text-link:focus-visible {
+    outline: 3px solid #1e40af;
+    outline-offset: 3px;
+}
+
+.explore-card {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    overflow: hidden;
+    border: 1px solid #e2e8f0;
+    border-radius: 24px;
+    background: #fff;
+    box-shadow: 0 12px 30px rgb(10 18 38 / 6%);
+    scroll-margin-top: 14rem;
+}
+
+.explore-card[hidden] { display: none; }
+
+.explore-card-banner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 28px;
+    background: linear-gradient(120deg, #eff6ff, #f0f9ff);
+    color: #1e40af;
+}
+
+.explore-stop-number {
+    font-size: 2.5rem;
+    font-weight: 700;
+    line-height: 1;
+    color: #1e3a8a;
+    opacity: 0.22;
+}
+
+.explore-card-banner > i { font-size: 1.5rem; }
+.explore-text-link { color: #1e40af; }
+.explore-text-link:hover { text-decoration: underline; text-underline-offset: 4px; }

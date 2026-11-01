@@ -16,6 +16,7 @@ parameters:
         menu:
             - { label: 'Home', url: '/' }
             - { label: 'Book a bike - our products', url: '/collections/all' }
+            - { label: 'Explore Raglan', url: '/pages/explore-raglan' }
             - { label: 'FAQs - all the info you need', url: '/pages/faq' }
             - { label: 'Find us and contact us', url: '/pages/contact-us' }
         socials:
