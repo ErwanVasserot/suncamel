@@ -1,0 +1,6 @@
+{% extends '@EasyAdmin/crud/index.html.twig' %}
+
+{% block page_actions %}
+    {{ parent() }}
+    <button type="button" class="btn btn-secondary" data-product-columns-reset title="Rétablir les largeurs par défaut des colonnes">Réinitialiser les colonnes</button>
+{% endblock %}

@@ -6,6 +6,7 @@ use App\Repository\ProductRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: ProductRepository::class)]
 class Product
@@ -55,9 +56,11 @@ class Product
     private int $stockQuantity = 1;
 
     #[ORM\Column(type: 'integer', options: ['default' => 7900])]
+    #[Assert\PositiveOrZero]
     private int $halfDayAmount = 7900;
 
     #[ORM\Column(type: 'integer', options: ['default' => 7900])]
+    #[Assert\PositiveOrZero]
     private int $fullDayAmount = 7900;
 
     #[ORM\Column(type: 'boolean', options: ['default' => true])]

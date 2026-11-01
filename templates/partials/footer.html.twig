@@ -3,7 +3,7 @@
         <div class="grid gap-8 md:grid-cols-[auto_1fr]">
             <a href="/" class="inline-flex items-center">
                 {% if site.logo is defined %}
-                    <img class="h-8 w-auto" src="{{ site.logo }}" alt="{{ site.name }}">
+                    <img class="h-8 w-auto" src="{{ site_image(site.logo) }}" alt="{{ site.name }}">
                 {% else %}
                     <span class="text-xl font-semibold">{{ site.name }}</span>
                 {% endif %}

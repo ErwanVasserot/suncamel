@@ -20,6 +20,12 @@ Site de location de vélos électriques à Raglan, développé avec Symfony. Il 
 - Gestion des produits, images, FAQ, utilisateurs et réservations avec EasyAdmin.
 - Contenu statique de secours lorsque certaines données ne sont pas disponibles en base.
 
+### Affichage sur mobile et ordinateur
+
+Les pages publiques conservent 20 px de marge latérale sur smartphone. À partir de 1 024 px, le contenu utilise la largeur disponible avec au moins 32 px de marge par côté et une largeur maximale de 1 600 px. Le formulaire de connexion reste centré et limité à 520 px.
+
+Le catalogue utilise des cartes de même largeur et des cadres photo de même hauteur. Le calendrier de location apparaît avant le récapitulatif des dates et heures ; ses jours s’adaptent aux petits écrans.
+
 ## Technologies
 
 - PHP 8.4 ou supérieur
@@ -275,6 +281,7 @@ Elle nécessite le rôle `ROLE_ADMIN` et permet de gérer :
 - les prix demi-journée, journée et les paliers dégressifs ;
 - les codes promotionnels, leur pourcentage de réduction et leur activation ;
 - les images des produits ;
+- le logo, les bannières, les galeries et les autres images du site ;
 - les questions et réponses de la FAQ ;
 - les Terms & Conditions avec un éditeur HTML dédié ;
 - les utilisateurs et leurs rôles ;
@@ -282,6 +289,28 @@ Elle nécessite le rôle `ROLE_ADMIN` et permet de gérer :
 - les périodes pendant lesquelles la location est fermée et le message affiché aux clients.
 
 Les migrations initiales créent des comptes de démonstration. Ils ne doivent pas être conservés tels quels en production : changez leurs mots de passe ou supprimez-les avant le déploiement.
+
+### Images du site et tarifs
+
+Dans **Administration > Images du site**, choisir l’emplacement puis téléverser une image de remplacement. Le catalogue initial comprend le logo, l’icône du navigateur, les images de partage, les bannières, les collections et les galeries. Les images personnalisées présentes dans les blocs des pages sont également recensées lors de la migration. Un remplacement s’applique à toutes les utilisations de l’image originale ; retirer le remplacement rétablit cette dernière. Pour ajouter un emplacement personnalisé ultérieurement, renseigner son libellé et l’URL ou le chemin de l’image originale.
+
+La liste utilise la même présentation que **Images produit** : identifiant, emplacement et miniature de l’image actuelle, y compris lorsqu’aucun remplacement n’a encore été téléversé. L’adresse technique de l’original est réservée au formulaire de modification.
+
+Les fichiers sont enregistrés dans `public/images/suncamel/products`, déjà couvert par le volume Docker persistant. Les visuels propres aux vélos sont exclus d’**Images du site** : les couvertures et bannières se modifient dans **Types de produit**, les galeries dans **Images produit**. Seule la bannière générale du catalogue reste dans **Images du site**. La migration transfère les éventuels remplacements de vélos vers leurs fiches avant de retirer les doublons.
+
+Dans **Types de produit > Modifier**, les champs **Prix demi-journée (NZD)** et **Prix journée (NZD)** définissent séparément les deux tarifs. Saisir le montant en dollars, par exemple `79,00` selon la langue du formulaire. Le catalogue présente les deux prix et, lorsqu’une période est sélectionnée, son montant total. Le panier et le paiement utilisent ces mêmes tarifs ; les paliers de plusieurs jours restent configurables dans **Tarifs dégressifs**. Les commandes déjà enregistrées conservent leurs montants historiques.
+
+### Largeur des colonnes des produits
+
+La liste **Types de produit** utilise des largeurs initiales adaptées au contenu : davantage de place pour le nom, l’accroche et la description, des colonnes compactes pour les images, le stock et l’état. Le tableau défile horizontalement si nécessaire.
+
+Glisser le bord droit d’un en-tête pour redimensionner sa colonne. Les largeurs sont mémorisées dans le navigateur, pour ce poste uniquement. Un double-clic sur la poignée rétablit la largeur de la colonne ; le bouton **Réinitialiser les colonnes** rétablit toutes les largeurs. Les poignées sont également accessibles au clavier avec les flèches gauche et droite.
+
+### Déploiement de la gestion des images du site
+
+Appliquer les migrations `Version20261101191449` et `Version20261101210000` avec la procédure habituelle de déploiement. La première crée et remplit `site_image`, la seconde retire les entrées propres aux vélos après avoir transféré leurs éventuels remplacements dans les fiches produit. Si un remplacement ne correspond à aucune fiche, la migration s’arrête avec son chemin pour permettre de le rattacher sans perdre le fichier.
+
+En Docker, les migrations sont exécutées au démarrage de l’application. Recompiler les images des services `app` et `worker` pour charger les nouveaux templates et assets. Les images téléversées restent dans le volume existant `product_images`.
 
 ### Fermetures des locations
 

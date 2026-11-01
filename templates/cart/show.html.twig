@@ -25,7 +25,7 @@
                     <div class="grid gap-4">
                         {% for item in items %}
                             <article class="grid gap-5 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200 sm:grid-cols-[160px_1fr_auto]">
-                                <img class="h-36 w-full rounded-xl object-contain" src="{{ fallback_asset('/images/suncamel/products/' ~ item.product.coverImage) }}" alt="{{ item.product.title }}">
+                                <img class="h-36 w-full rounded-xl object-contain" src="{{ site_image(item.product.coverImage starts with '/' ? item.product.coverImage : '/images/suncamel/products/' ~ item.product.coverImage) }}" alt="{{ item.product.title }}">
                                 <div>
                                     <h2 class="text-xl font-semibold">{{ item.product.title }}</h2>
                                     <p class="mt-2 text-slate-600">{{ item.pickup|date('d M Y, H:i', 'Pacific/Auckland') }} → {{ item.return|date('d M Y, H:i', 'Pacific/Auckland') }}</p>

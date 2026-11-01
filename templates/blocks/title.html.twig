@@ -2,7 +2,7 @@
 <section class="relative min-h-[360px] flex items-center text-white">
     {% if data.image is defined %}
         <div class="absolute inset-0">
-            <img class="h-full w-full object-cover" src="{{ data.image }}" alt="">
+            <img class="h-full w-full object-cover" src="{{ site_image(data.image) }}" alt="">
             <div class="absolute inset-0 bg-gradient-to-br from-blue-900/70 to-blue-900/20"></div>
         </div>
     {% endif %}

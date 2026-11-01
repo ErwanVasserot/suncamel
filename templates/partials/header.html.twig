@@ -10,7 +10,7 @@
     <section class="sticky top-0 z-40 border-b border-slate-200 bg-white">
         <div class="container header-main py-4">
             <a href="/" class="header-logo flex items-center gap-3">
-                <img src="{{ site.logo }}" alt="{{ site.name }}">
+                <img src="{{ site_image(site.logo) }}" alt="{{ site.name }}">
             </a>
 
             <div class="header-period flex items-center justify-center">
@@ -103,6 +103,8 @@
             </div>
 
             <div class="rental-period-card">
+                <div class="rental-calendar" data-rental-period-v2-target="months"></div>
+                <p class="rental-closure-message" data-rental-period-v2-target="closureMessage" role="status" aria-hidden="true">Rental is closed</p>
                 <div class="rental-period-summary">
                     <div>
                         <span class="rental-period-label">Rental duration</span>
@@ -128,9 +130,6 @@
                         </select>
                     </div>
                 </div>
-
-                <div class="rental-calendar" data-rental-period-v2-target="months"></div>
-                <p class="rental-closure-message" data-rental-period-v2-target="closureMessage" role="status" aria-hidden="true">Rental is closed</p>
 
                 <button class="rental-period-clear" type="button" data-action="rental-period-v2#clear">
                     <span aria-hidden="true">×</span>

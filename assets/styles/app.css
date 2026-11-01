@@ -3,13 +3,12 @@
 @layer base {
   * { @apply box-border; }
   body { @apply bg-white text-slate-900 antialiased; font-family: "Poppins", "Open Sans", system-ui, sans-serif; }
+  html, body { width: 100%; overflow-x: clip; }
   img { @apply block max-w-full; }
   a { @apply text-inherit no-underline; }
 }
 
 @layer components {
-  .container { @apply mx-auto w-[min(100%-32px,1100px)]; }
-
   .btn { @apply inline-flex items-center justify-center rounded-full font-semibold transition; }
   .btn-primary { @apply bg-blue-800 text-white px-5 py-2.5; }
   .btn-outline { @apply border border-white text-white px-5 py-2.5; }
@@ -36,7 +35,7 @@
 
   .rental-period-dialog { @apply fixed inset-0 z-[70] hidden items-center justify-center bg-black/35 px-4 py-5; }
   .rental-period-open .rental-period-dialog { @apply flex; }
-  .rental-period-panel { @apply grid max-h-[86vh] w-[min(100%,1080px)] grid-rows-[auto_1fr_auto] overflow-hidden rounded-xl bg-white shadow-2xl; }
+  .rental-period-panel { @apply grid min-w-0 max-h-[86vh] w-[min(100%,1080px)] grid-rows-[auto_minmax(0,1fr)_auto] overflow-hidden rounded-xl bg-white shadow-2xl; }
   .rental-period-header { @apply flex items-center justify-between bg-slate-50 px-6 py-4; }
   .rental-period-header h2 { @apply text-xl font-bold leading-none; }
   .rental-period-close { @apply text-3xl leading-none text-slate-500 transition hover:text-slate-900; }
@@ -76,16 +75,17 @@
     .rental-period-header { @apply px-5 py-5; }
     .rental-period-header h2 { @apply text-2xl; }
     .rental-period-close { @apply text-4xl; }
-    .rental-period-card { @apply m-4 overflow-auto px-5 py-6; }
+    .rental-period-card { @apply m-3 min-w-0 overflow-auto px-3 py-6; }
     .rental-period-summary { @apply grid-cols-1 gap-5; }
     .rental-period-label { @apply mb-2 text-lg; }
     .rental-period-summary strong { @apply text-2xl underline-offset-[10px]; }
     .rental-period-arrow { @apply hidden; }
-    .rental-calendar { @apply mt-8 grid-cols-1 gap-12 px-0 pb-10; }
+    .rental-calendar { @apply mt-0 mb-6 min-w-0 grid-cols-1 gap-8 px-0 pb-0; }
+    .rental-calendar-month { min-width: 0; }
     .rental-calendar-month h3 { @apply text-2xl; }
     .rental-calendar-weekdays { @apply text-base; }
     .rental-calendar-grid { @apply gap-y-2; }
-    .rental-calendar-day { @apply h-10 w-10 text-xl; }
+    .rental-calendar-day { @apply h-10 w-full max-w-10 text-lg; }
     .rental-calendar-empty { @apply h-10; }
     .rental-period-clear { @apply text-xl; }
     .rental-period-actions { @apply px-5 py-5; }
@@ -95,6 +95,13 @@
 
 @layer utilities {
   .page-gradient { @apply bg-gradient-to-b from-white via-slate-50 to-white; }
+}
+
+/* Keep page gutters when Tailwind also generates its container utility. */
+.container { margin-inline: auto; width: calc(100% - 40px); max-width: 1100px; }
+
+@media (min-width: 1024px) {
+  .container { width: calc(100% - 64px); max-width: 1600px; }
 }
 
 .header-main {
@@ -110,6 +117,7 @@
 .header-logo { grid-area: logo; max-width: 100%; }
 .header-logo img { width: min(42vw, 160px); height: auto; max-height: 60px; object-fit: contain; }
 .header-period { grid-area: period; }
+.header-period, .header-period > button, .header-period > button > span { min-width: 0; }
 .header-actions { grid-area: actions; }
 .header-menu-button { font-size: 1rem; }
 

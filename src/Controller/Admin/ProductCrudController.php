@@ -3,6 +3,8 @@
 namespace App\Controller\Admin;
 
 use App\Entity\Product;
+use EasyCorp\Bundle\EasyAdminBundle\Config\Assets;
+use EasyCorp\Bundle\EasyAdminBundle\Config\Crud;
 use EasyCorp\Bundle\EasyAdminBundle\Controller\AbstractCrudController;
 use EasyCorp\Bundle\EasyAdminBundle\Field\ArrayField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\BooleanField;
@@ -21,6 +23,18 @@ class ProductCrudController extends AbstractCrudController
         return Product::class;
     }
 
+    public function configureCrud(Crud $crud): Crud
+    {
+        return $crud->overrideTemplate('crud/index', 'admin/product/index.html.twig');
+    }
+
+    public function configureAssets(Assets $assets): Assets
+    {
+        return $assets
+            ->addCssFile('styles/admin-product-table.css')
+            ->addJsFile('admin/product-table.js');
+    }
+
     public function configureFields(string $pageName): iterable
     {
         yield IdField::new('id')->hideOnForm();
@@ -28,10 +42,10 @@ class ProductCrudController extends AbstractCrudController
         yield SlugField::new('slug')->setTargetFieldName('title');
         yield TextField::new('tagline', 'Accroche');
         yield TextareaField::new('summary', 'Description');
-        yield MoneyField::new('halfDayAmount', 'Prix demi-journée')
+        yield MoneyField::new('halfDayAmount', 'Prix demi-journée (NZD)')
             ->setCurrency('NZD')->setStoredAsCents()
             ->setHelp('Créneaux 08:00–12:00 et 12:00–16:00.');
-        yield MoneyField::new('fullDayAmount', 'Prix journée')
+        yield MoneyField::new('fullDayAmount', 'Prix journée (NZD)')
             ->setCurrency('NZD')->setStoredAsCents()
             ->setHelp('Journée complète 08:00–16:00 et tarif par défaut pour plusieurs jours.');
         yield TextField::new('collectionSlug', 'Collection')->setHelp('Ex: adventure-bikes, cruiser-e-bikes');
